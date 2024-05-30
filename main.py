@@ -112,11 +112,14 @@ with st.expander('📝 Registro de Datos'):
 # Visualización de datos registrados
 with st.expander('📓 Datos Registrados'):
     st.subheader("Visualización de datos registrados")
-    unique_values = progreso_df.drop_duplicates(subset=['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones'])
-    unique_values = unique_values[['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones']]
-    unique_values = unique_values.rename(columns={'Id_Usuario': 'Persona'})
-    st.dataframe(unique_values)
-    st.markdown(download_csv(unique_values, 'Progreso_Completo'), unsafe_allow_html=True)
+    # Unir DataFrame de progreso con el de usuarios para obtener nombres en lugar de ID de usuario
+    progreso_nombre_df = progreso_df.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
+    # Seleccionar columnas específicas para mostrar en la tabla
+    selected_columns = ['Dia', 'Nombre', 'Maquina', 'Sets', 'Repeticiones']
+    # Mostrar la tabla con las columnas seleccionadas
+    st.dataframe(progreso_nombre_df[selected_columns])
+    st.markdown(download_csv(progreso_df, 'Progreso_Completo'), unsafe_allow_html=True)
+
 
 
 # Visualización de gráficos
