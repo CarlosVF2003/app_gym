@@ -112,9 +112,12 @@ with st.expander('📝 Registro de Datos'):
 # Visualización de datos registrados
 with st.expander('📓 Datos Registrados'):
     st.subheader("Visualización de datos registrados")
-    unique_values = progreso_df.drop_duplicates(subset=['Dia', 'Id_Usuario', 'Maquina', 'Peso', 'Repeticiones', 'Medida'])
+    unique_values = progreso_df.drop_duplicates(subset=['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones'])
+    unique_values = unique_values[['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones']]
+    unique_values = unique_values.rename(columns={'Id_Usuario': 'Persona'})
     st.dataframe(unique_values)
-    st.markdown(download_csv(progreso_df, 'Progreso_Completo'), unsafe_allow_html=True)
+    st.markdown(download_csv(unique_values, 'Progreso_Completo'), unsafe_allow_html=True)
+
 
 # Visualización de gráficos
 with st.expander('📊 Visualización de Gráficos'):
