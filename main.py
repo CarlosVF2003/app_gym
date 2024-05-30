@@ -13,9 +13,6 @@ try:
 except FileNotFoundError as e:
     st.error(f"Error al cargar archivos: {e}")
 
-# Unir DataFrame progreso_persona_grupo con grupo_muscular_df
-progreso_persona_grupo = progreso_df.merge(grupo_muscular_df, on='Maquina', how='left')
-
 # Funciones
 def formulario_desarrollo_fuerza(Sets):
     pesos = []
@@ -60,8 +57,6 @@ def calcular_promedio(df):
     ).reset_index()
     return resultado_final
 
-
-
 def crear_graficos(df_grupo, colores):
     df_grupo = df_grupo.reset_index(drop=True)
     if len(df_grupo) == 0:
@@ -105,32 +100,7 @@ with st.expander('📝 Registro de Datos'):
     elif Enfoque == 'Mejora de la Resistencia':
         pesos, repeticiones, descansos = formulario_mejora_resistencia(Sets)
     else:
-        pesos, repeticiones, descansos = formulario_hipertrofia_muscular(Sets)
-        
-    form_completo = all(pesos) and all(repeticiones) and all(descansos)
-    
-    if form_completo:
-        if st.button('Guardar'):
-            progreso_new = pd.DataFrame({
-                'Dia': [Dia] * Sets,
-                'Id_Usuario': usuario_df[usuario_df['Nombre'] == Persona]['Id_Usuario'].values[0],
-                'Maquina': [Maquina] * Sets,
-                'Sets': [Sets] * Sets,
-                'Peso': pesos,
-                'Repeticiones': repeticiones,
-                'Descanso': descansos
-            })
-            progreso_df = pd.concat([progreso_df, progreso_new], ignore_index=True)
-            progreso_df.to_csv('/mnt/data/Progreso.csv', index=False)
-            st.success('¡Datos registrados con éxito!')
-            st.markdown(download_csv(progreso_df, 'Progreso_Actualizado'), unsafe_allow_html=True)
-
-# Visualización de datos registrados
-with st.expander('📓 Datos Registrados'):
-    st.subheader("Visualización de datos registrados")
-    unique_values = progreso_df[['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones']]
-    unique_values['Nombre'] = unique_values['Id_Usuario'].map(usuario_df.set_index('Id_Usuario')['Nombre'])
-    st.dataframe(unique_values[['Dia', 'Nombre', 'Maquina', 'Sets', 'Repeticiones']])
+        pesos, repeticiones, descansos
 
 # Visualización de gráficos
 with st.expander('📊 Visualización de Gráficos'):
