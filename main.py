@@ -1,4 +1,4 @@
-# Importamos librerias
+# Importamos librerías
 import pandas as pd
 import streamlit as st
 from pathlib import Path
@@ -6,9 +6,12 @@ from base64 import b64encode
 import altair as alt
 
 # Cargar datos
-progreso_df = pd.read_csv('data/Progreso.csv')
-grupo_muscular_df = pd.read_csv('data/Grupo_muscular.csv')
-usuario_df = pd.read_csv('data/Usuarios.csv')
+try:
+    progreso_df = pd.read_csv('/mnt/data/Progreso.csv')
+    grupo_muscular_df = pd.read_csv('/mnt/data/Grupo_muscular.csv')
+    usuario_df = pd.read_csv('/mnt/data/Usuarios.csv')
+except FileNotFoundError as e:
+    st.error(f"Error al cargar archivos: {e}")
 
 # Funciones
 def formulario_desarrollo_fuerza(Sets):
@@ -110,7 +113,7 @@ with st.expander('📝 Registro de Datos'):
                 'Descanso': descansos
             })
             progreso_df = pd.concat([progreso_df, progreso_new], ignore_index=True)
-            progreso_df.to_csv('data/Progreso.csv', index=False)
+            progreso_df.to_csv('/mnt/data/Progreso.csv', index=False)
             st.success('¡Datos registrados con éxito!')
             st.markdown(download_csv(progreso_df, 'Progreso_Actualizado'), unsafe_allow_html=True)
 
@@ -127,3 +130,19 @@ with st.expander('📊 Visualización de Gráficos'):
     opcion_persona = st.selectbox('Selecciona una persona para graficar:', usuario_df['Nombre'].unique())
     progreso_persona = progreso_df[progreso_df['Persona'] == opcion_persona]
     crear_graficos(progreso_persona, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
+    
+    # Gráficos por grupo muscular
+    st.subheader("Datos de Gráficos por Grupo Muscular")
+    progreso_persona_grupo = progreso_persona.merge(grupo_muscular_df, on='Maquina')
+    if not progreso_persona_grupo.empty:
+        grafica_grupo_muscular = alt.Chart(progreso_persona_grupo).mark_line().encode(
+            x='Dia:T',
+            y='Peso:Q',
+            color='Grupo_Muscular:N',
+            tooltip=['Dia', 'Peso', 'Grupo_Muscular']
+        ).properties(
+            title=f"Progreso de {opcion_persona} por grupo muscular"
+        )
+        st.altair_chart(grafica_grupo_muscular, use_container_width=True)
+    else:
+        st.warning("No hay datos disponibles para los grupos musculares.")
