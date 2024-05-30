@@ -52,11 +52,14 @@ def calcular_promedio(df):
     df['Peso_Total'] = df['Peso'] * df['Sets'] * df['Repeticiones']
     df['Suma_Repeticiones'] = df.groupby(['Id_Usuario', 'Dia'])['Repeticiones'].transform('sum')
     promedio_ponderado_por_persona = df.groupby(['Id_Usuario', 'Dia']).apply(
-    lambda x: (x['Peso_Total'].sum() / x['Sets_x_Reps'].sum())
+        lambda x: (x['Peso_Total'].sum() / x['Sets_x_Reps'].sum())
     ).reset_index(name='Promedio_Ponderado')
-    resultado_final = df[['Id_Usuario', 'Dia', 'Suma_Repeticiones']].drop_duplicates().merge(
-    promedio_ponderado_por_persona, on=['Id_Usuario', 'Dia'])
+    resultado_final = df.groupby(['Id_Usuario', 'Dia']).agg(
+        Suma_Repeticiones=('Suma_Repeticiones', 'first'),
+        Promedio_Ponderado=('Promedio_Ponderado', 'first')
+    ).reset_index()
     return resultado_final
+
 
 def crear_graficos(df_grupo, colores):
     df_grupo = df_grupo.reset_index(drop=True)
@@ -142,7 +145,10 @@ with st.expander('📊 Visualización de Gráficos'):
         grupos_musculares = progreso_persona_grupo['Grupo_Muscular'].unique().tolist()
         for grupo in grupos_musculares:
             st.write(f"Grupo Muscular: {grupo}")
-            progreso_grupo_muscular = progreso_persona_grupo[progreso_persona_grupo['Grupo_Muscular'] == grupo]
-            crear_graficos(progreso_grupo_muscular, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
+            progreso_grupo_muscular = progreso_persona_grupo[progreso_persona_grupo['Maquina'].isin(grupo_muscular_df[grupo_muscular_df['Grupo_Muscular'] == grupo]['Maquina'])]
+            if not progreso_grupo_muscular.empty:
+                crear_graficos(progreso_grupo_muscular, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
+            else:
+                st.warning(f"No hay suficientes datos disponibles para mostrar los gráficos del grupo muscular: {grupo}")
     else:
         st.warning("No hay suficientes datos disponibles para mostrar los gráficos por grupo muscular.")
