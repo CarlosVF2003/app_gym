@@ -130,7 +130,7 @@ with st.expander('📓 Datos Registrados'):
 
 # Visualización de gráficos
 with st.expander('📊 Visualización de Gráficos'):
-    st.subheader("Datos de Gráficos por Persona y Maquina")
+    st.subheader("Datos de Gráficos por Persona y Máquina")
     opcion_persona = st.selectbox('Selecciona una persona para graficar:', usuario_df['Nombre'].unique())
     id_usuario = usuario_df[usuario_df['Nombre'] == opcion_persona]['Id_Usuario'].values[0]
     progreso_persona = progreso_df[progreso_df['Id_Usuario'] == id_usuario]
