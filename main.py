@@ -72,15 +72,6 @@ def crear_graficos(df_grupo, colores):
         title="Promedio de Peso Levantado"
     )
     st.altair_chart(line_chart, use_container_width=True)
-    bar_chart = alt.Chart(resultado_final).mark_bar().encode(
-        x='Dia_ordenado:T',
-        y=alt.Y('Suma_Repeticiones', title='Total de Repeticiones'),
-        color=alt.Color('Nombre:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
-        tooltip=['Nombre', 'Dia', 'Suma_Repeticiones']
-    ).properties(
-        title="Total de Repeticiones"
-    )
-    st.altair_chart(bar_chart, use_container_width=True)
 
 # Título de la aplicación
 st.title('🏋️‍♂️ Nuestro Progreso en el Gym 🏋️‍♀️')
