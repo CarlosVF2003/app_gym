@@ -145,7 +145,7 @@ with st.expander('📊 Visualización de Gráficos'):
             with st.expander(f'Grupo Muscular: {grupo}'):
                 # Filtrar el DataFrame por el grupo muscular seleccionado
                 progreso_grupo_seleccionado = progreso_persona_grupo[progreso_persona_grupo['Grupo_Muscular'] == grupo]
-
+    
                 # Verificar si hay suficientes datos para mostrar el gráfico
                 if not progreso_grupo_seleccionado.empty:
                     # Gráfico de línea para el progreso por grupo muscular
@@ -162,3 +162,4 @@ with st.expander('📊 Visualización de Gráficos'):
                     st.warning(f"No hay suficientes datos disponibles para mostrar el gráfico para el grupo muscular: {grupo}")
     else:
         st.error("La columna 'Grupo_Muscular' no está presente en el DataFrame después de la unión.")
+
