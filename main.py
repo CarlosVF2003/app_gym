@@ -65,8 +65,11 @@ def crear_graficos(df_grupo, colores):
     if len(df_grupo) == 0:
         st.warning("No hay suficientes datos disponibles para mostrar los gráficos.")
         return
+
     resultado_final = calcular_promedio(df_grupo)
-    resultado_final['Dia_ordenado'] = resultado_final.groupby('Dia').cumcount() + 1
+    resultado_final = resultado_final.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
+
+    # Gráfico de promedio de peso levantado
     line_chart = alt.Chart(resultado_final).mark_line().encode(
         x='Dia_ordenado:T',
         y=alt.Y('Promedio_Ponderado', title='Promedio de Peso'),
@@ -76,6 +79,8 @@ def crear_graficos(df_grupo, colores):
         title="Promedio de Peso Levantado"
     )
     st.altair_chart(line_chart, use_container_width=True)
+
+    # Gráfico de total de repeticiones
     bar_chart = alt.Chart(resultado_final).mark_bar().encode(
         x='Dia_ordenado:T',
         y=alt.Y('Suma_Repeticiones', title='Total de Repeticiones'),
@@ -85,6 +90,27 @@ def crear_graficos(df_grupo, colores):
         title="Total de Repeticiones"
     )
     st.altair_chart(bar_chart, use_container_width=True)
+
+    # Gráficos por grupo muscular
+    if 'Grupo_Muscular' in df_grupo.columns:
+        grupos_musculares = df_grupo['Grupo_Muscular'].unique().tolist()
+        for grupo in grupos_musculares:
+            df_grupo_grupo = df_grupo[df_grupo['Grupo_Muscular'] == grupo]
+            if not df_grupo_grupo.empty:
+                grafica_grupo_muscular = alt.Chart(df_grupo_grupo).mark_line().encode(
+                    x='Dia_ordenado:T',
+                    y='Peso:Q',
+                    color='Nombre:N',
+                    tooltip=['Dia', 'Peso', 'Nombre']
+                ).properties(
+                    title=f"Progreso por {grupo}"
+                )
+                st.altair_chart(grafica_grupo_muscular, use_container_width=True)
+            else:
+                st.warning(f"No hay suficientes datos disponibles para mostrar el gráfico de {grupo}.")
+    else:
+        st.warning("No se encontró la columna 'Grupo_Muscular' en el DataFrame.")
+
 
 # Título de la aplicación
 st.title('🏋️‍♂️ Nuestro Progreso en el Gym 🏋️‍♀️')
