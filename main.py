@@ -125,7 +125,8 @@ with st.expander('📝 Registro de Datos'):
 with st.expander('📓 Datos Registrados'):
     st.subheader("Visualización de datos registrados")
     unique_values = progreso_df[['Dia', 'Id_Usuario', 'Maquina', 'Sets', 'Repeticiones']]
-    st.dataframe(unique_values)
+    unique_values['Nombre'] = unique_values['Id_Usuario'].map(usuario_df.set_index('Id_Usuario')['Nombre'])
+    st.dataframe(unique_values[['Dia', 'Nombre', 'Maquina', 'Sets', 'Repeticiones']])
 
 # Visualización de gráficos
 with st.expander('📊 Visualización de Gráficos'):
