@@ -7,8 +7,8 @@ import altair as alt
 
 # Cargar datos
 progreso_df = pd.read_csv('data/Progreso.csv')
-grupo_muscular_df = pd.read_csv('data/Grupo_Muscular.csv')
-usuario_df = pd.read_csv('data/Usuario.csv')
+grupo_muscular_df = pd.read_csv('data/Grupo_muscular.csv')
+usuario_df = pd.read_csv('data/Usuarios.csv')
 
 # Funciones
 def formulario_desarrollo_fuerza(Sets):
