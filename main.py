@@ -7,9 +7,9 @@ import altair as alt
 
 # Cargar datos
 try:
-    progreso_df = pd.read_csv('/mnt/data/Progreso.csv')
-    grupo_muscular_df = pd.read_csv('/mnt/data/Grupo_muscular.csv')
-    usuario_df = pd.read_csv('/mnt/data/Usuarios.csv')
+    progreso_df = pd.read_csv('data/Progreso.csv')
+    grupo_muscular_df = pd.read_csv('data/Grupo_muscular.csv')
+    usuario_df = pd.read_csv('data/Usuarios.csv')
 except FileNotFoundError as e:
     st.error(f"Error al cargar archivos: {e}")
 
