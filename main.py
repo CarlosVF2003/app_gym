@@ -47,12 +47,12 @@ def download_csv(df, filename):
 def calcular_promedio(df):    
     df['Sets_x_Reps'] = df['Sets'] * df['Repeticiones']
     df['Peso_Total'] = df['Peso'] * df['Sets'] * df['Repeticiones']
-    df['Suma_Repeticiones'] = df.groupby(['Persona', 'Dia'])['Repeticiones'].transform('sum')
-    promedio_ponderado_por_persona = df.groupby(['Persona', 'Dia']).apply(
+    df['Suma_Repeticiones'] = df.groupby(['Id_Usuario', 'Dia'])['Repeticiones'].transform('sum')
+    promedio_ponderado_por_persona = df.groupby(['Id_Usuario', 'Dia']).apply(
     lambda x: (x['Peso_Total'].sum() / x['Sets_x_Reps'].sum())
     ).reset_index(name='Promedio_Ponderado')
-    resultado_final = df[['Persona', 'Dia', 'Suma_Repeticiones']].drop_duplicates().merge(
-    promedio_ponderado_por_persona, on=['Persona', 'Dia'])
+    resultado_final = df[['Id_Usuario', 'Dia', 'Suma_Repeticiones']].drop_duplicates().merge(
+    promedio_ponderado_por_persona, on=['Id_Usuario', 'Dia'])
     return resultado_final
 
 def crear_graficos(df_grupo, colores):
@@ -61,12 +61,13 @@ def crear_graficos(df_grupo, colores):
         st.warning("No hay suficientes datos disponibles para mostrar los gráficos.")
         return
     resultado_final = calcular_promedio(df_grupo)
+    resultado_final = resultado_final.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
     resultado_final['Dia_ordenado'] = resultado_final.groupby('Dia').cumcount() + 1
     line_chart = alt.Chart(resultado_final).mark_line().encode(
         x='Dia_ordenado:T',
         y=alt.Y('Promedio_Ponderado', title='Promedio de Peso'),
-        color=alt.Color('Persona:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
-        tooltip=['Persona', 'Dia', 'Promedio_Ponderado']
+        color=alt.Color('Nombre:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
+        tooltip=['Nombre', 'Dia', 'Promedio_Ponderado']
     ).properties(
         title="Promedio de Peso Levantado"
     )
@@ -74,8 +75,8 @@ def crear_graficos(df_grupo, colores):
     bar_chart = alt.Chart(resultado_final).mark_bar().encode(
         x='Dia_ordenado:T',
         y=alt.Y('Suma_Repeticiones', title='Total de Repeticiones'),
-        color=alt.Color('Persona:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
-        tooltip=['Persona', 'Dia', 'Suma_Repeticiones']
+        color=alt.Color('Nombre:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
+        tooltip=['Nombre', 'Dia', 'Suma_Repeticiones']
     ).properties(
         title="Total de Repeticiones"
     )
@@ -105,7 +106,7 @@ with st.expander('📝 Registro de Datos'):
         if st.button('Guardar'):
             progreso_new = pd.DataFrame({
                 'Dia': [Dia] * Sets,
-                'Persona': [Persona] * Sets,
+                'Id_Usuario': usuario_df[usuario_df['Nombre'] == Persona]['Id_Usuario'].values[0],
                 'Maquina': [Maquina] * Sets,
                 'Sets': [Sets] * Sets,
                 'Peso': pesos,
@@ -120,7 +121,7 @@ with st.expander('📝 Registro de Datos'):
 # Visualización de datos registrados
 with st.expander('📓 Datos Registrados'):
     st.subheader("Visualización de datos registrados")
-    unique_values = progreso_df.drop_duplicates(subset=['Dia', 'Persona', 'Maquina','Sets','Peso','Repeticiones','Descanso'])
+    unique_values = progreso_df.drop_duplicates(subset=['Dia', 'Id_Usuario', 'Maquina','Sets','Peso','Repeticiones','Descanso'])
     st.dataframe(unique_values)
     st.markdown(download_csv(progreso_df, 'Progreso_Completo'), unsafe_allow_html=True)
 
@@ -128,7 +129,8 @@ with st.expander('📓 Datos Registrados'):
 with st.expander('📊 Visualización de Gráficos'):
     st.subheader("Datos de Gráficos por Persona y Maquina")
     opcion_persona = st.selectbox('Selecciona una persona para graficar:', usuario_df['Nombre'].unique())
-    progreso_persona = progreso_df[progreso_df['Persona'] == opcion_persona]
+    id_usuario = usuario_df[usuario_df['Nombre'] == opcion_persona]['Id_Usuario'].values[0]
+    progreso_persona = progreso_df[progreso_df['Id_Usuario'] == id_usuario]
     crear_graficos(progreso_persona, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
     
     # Gráficos por grupo muscular
@@ -141,8 +143,8 @@ with st.expander('📊 Visualización de Gráficos'):
             color='Grupo_Muscular:N',
             tooltip=['Dia', 'Peso', 'Grupo_Muscular']
         ).properties(
-            title=f"Progreso de {opcion_persona} por grupo muscular"
+            title="Progreso por Grupo Muscular"
         )
         st.altair_chart(grafica_grupo_muscular, use_container_width=True)
     else:
-        st.warning("No hay datos disponibles para los grupos musculares.")
+        st.warning("No hay suficientes datos disponibles para mostrar los gráficos por grupo muscular.")
