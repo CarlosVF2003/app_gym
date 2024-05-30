@@ -121,32 +121,44 @@ with st.expander('📓 Datos Registrados'):
     st.markdown(download_csv(progreso_df, 'Progreso_Completo'), unsafe_allow_html=True)
 
 
-
 # Visualización de gráficos
 with st.expander('📊 Visualización de Gráficos'):
-    st.subheader("Datos de Gráficos por Grupo Muscular")
-    # Obtener todos los grupos musculares únicos
-    grupos_musculares = progreso_persona_grupo['Grupo_Muscular'].unique().tolist()
-    # Widget multiselect para que el usuario seleccione los grupos musculares de interés
-    grupos_seleccionados = st.multiselect('Selecciona los grupos musculares:', grupos_musculares)
+    st.subheader("Datos de Gráficos por Persona y Maquina")
+    opcion_persona = st.selectbox('Selecciona una persona para graficar:', usuario_df['Nombre'].unique())
+    id_usuario = usuario_df[usuario_df['Nombre'] == opcion_persona]['Id_Usuario'].values[0]
+    progreso_persona = progreso_df[progreso_df['Id_Usuario'] == id_usuario]
+    crear_graficos(progreso_persona, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
     
-    # Iterar sobre los grupos musculares seleccionados
-    for grupo in grupos_seleccionados:
-        with st.expander(f'Grupo Muscular: {grupo}'):
-            # Filtrar el DataFrame por el grupo muscular seleccionado
-            progreso_grupo_seleccionado = progreso_persona_grupo[progreso_persona_grupo['Grupo_Muscular'] == grupo]
+    # Gráficos por grupo muscular
+    st.subheader("Datos de Gráficos por Grupo Muscular")
+    
+    # Verificar si la columna 'Grupo_Muscular' está presente en el DataFrame resultante de la unión
+    if 'Grupo_Muscular' in progreso_persona_grupo.columns:
+        # Obtener todos los grupos musculares únicos
+        grupos_musculares = progreso_persona_grupo['Grupo_Muscular'].unique().tolist()
+        
+        # Widget multiselect para que el usuario seleccione los grupos musculares de interés
+        grupos_seleccionados = st.multiselect('Selecciona los grupos musculares:', grupos_musculares)
+        
+        # Iterar sobre los grupos musculares seleccionados
+        for grupo in grupos_seleccionados:
+            with st.expander(f'Grupo Muscular: {grupo}'):
+                # Filtrar el DataFrame por el grupo muscular seleccionado
+                progreso_grupo_seleccionado = progreso_persona_grupo[progreso_persona_grupo['Grupo_Muscular'] == grupo]
 
-            # Verificar si hay suficientes datos para mostrar el gráfico
-            if not progreso_grupo_seleccionado.empty:
-                # Gráfico de línea para el progreso por grupo muscular
-                grafica_grupo_muscular = alt.Chart(progreso_grupo_seleccionado).mark_line().encode(
-                    x='Dia:T',
-                    y='Peso:Q',
-                    color='Maquina:N',
-                    tooltip=['Dia', 'Peso', 'Maquina']
-                ).properties(
-                    title=f"Progreso para el grupo muscular: {grupo}"
-                )
-                st.altair_chart(grafica_grupo_muscular, use_container_width=True)
-            else:
-                st.warning(f"No hay suficientes datos disponibles para mostrar el gráfico para el grupo muscular: {grupo}")
+                # Verificar si hay suficientes datos para mostrar el gráfico
+                if not progreso_grupo_seleccionado.empty:
+                    # Gráfico de línea para el progreso por grupo muscular
+                    grafica_grupo_muscular = alt.Chart(progreso_grupo_seleccionado).mark_line().encode(
+                        x='Dia:T',
+                        y='Peso:Q',
+                        color='Maquina:N',
+                        tooltip=['Dia', 'Peso', 'Maquina']
+                    ).properties(
+                        title=f"Progreso para el grupo muscular: {grupo}"
+                    )
+                    st.altair_chart(grafica_grupo_muscular, use_container_width=True)
+                else:
+                    st.warning(f"No hay suficientes datos disponibles para mostrar el gráfico para el grupo muscular: {grupo}")
+    else:
+        st.error("La columna 'Grupo_Muscular' no está presente en el DataFrame después de la unión.")
