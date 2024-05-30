@@ -51,11 +51,14 @@ def download_csv(df, filename):
 def calcular_promedio(df):    
     df['Sets_x_Reps'] = df['Sets'] * df['Repeticiones']
     df['Peso_Total'] = df['Peso'] * df['Sets'] * df['Repeticiones']
-    resultado_final = df.groupby(['Nombre', 'Dia']).agg(
-        Promedio_Ponderado=('Peso_Total', 'sum') / ('Sets_x_Reps', 'sum'),
-        Suma_Repeticiones=('Repeticiones', 'sum')
-    ).reset_index()
+    df['Suma_Repeticiones'] = df.groupby(['Id_Usuario', 'Dia'])['Repeticiones'].transform('sum')
+    promedio_ponderado_por_persona = df.groupby(['Id_Usuario', 'Dia']).apply(
+        lambda x: x['Peso_Total'].sum() / x['Sets_x_Reps'].sum()
+    ).reset_index(name='Promedio_Ponderado')
+    resultado_final = df[['Id_Usuario', 'Dia', 'Suma_Repeticiones']].drop_duplicates().merge(
+        promedio_ponderado_por_persona, on=['Id_Usuario', 'Dia'])
     return resultado_final
+
 
 def crear_graficos(df_grupo, colores):
     df_grupo = df_grupo.reset_index(drop=True)
