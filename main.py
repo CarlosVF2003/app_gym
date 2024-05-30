@@ -47,7 +47,7 @@ def download_csv(df, filename):
     href = f'<a href="data:file/csv;base64,{b64}" download="{filename}.csv">Descargar {filename}</a>'
     return href
 
-def calcular_promedio(df):    
+def calcular_promedio(df):
     df['Sets_x_Reps'] = df['Sets'] * df['Repeticiones']
     df['Peso_Total'] = df['Peso'] * df['Sets'] * df['Repeticiones']
     df['Suma_Repeticiones'] = df.groupby(['Id_Usuario', 'Dia'])['Repeticiones'].transform('sum')
@@ -59,6 +59,7 @@ def calcular_promedio(df):
         Promedio_Ponderado=('Promedio_Ponderado', 'first')
     ).reset_index()
     return resultado_final
+
 
 
 def crear_graficos(df_grupo, colores):
