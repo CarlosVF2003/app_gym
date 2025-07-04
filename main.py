@@ -1,174 +1,139 @@
-# Importamos librerías
 import pandas as pd
 import streamlit as st
-from pathlib import Path
-from base64 import b64encode
 import altair as alt
 
-# Cargar datos
-try:
-    progreso_df = pd.read_csv('data/Progreso.csv')
-    grupo_muscular_df = pd.read_csv('data/Grupo_muscular.csv')
-    usuario_df = pd.read_csv('data/Usuarios.csv')
-except FileNotFoundError as e:
-    st.error(f"Error al cargar archivos: {e}")
-
-# Unir las tablas
-progreso_df = progreso_df.merge(grupo_muscular_df, on='Maquina')
-progreso_df = progreso_df.merge(usuario_df, on='Id_Usuario')
-
-# Funciones
-def formulario_desarrollo_fuerza(Sets):
-    pesos = []
-    for i in range(Sets):
-        peso = st.number_input(f'💪 Peso para el Set {i+1}:', min_value=0.0, step=0.1, format="%.1f")
-        pesos.append(peso)
-    repeticiones = st.number_input('Repeticiones:', min_value=1, max_value=30, step=1)
-    descanso = st.selectbox('Tiempo de descanso:', ('1-2 min', '2-3 min', '3-4 min'))
-    return pesos, [repeticiones] * Sets, [descanso] * Sets
-
-def formulario_mejora_resistencia(Sets):
-    pesos = []
-    for i in range(Sets):
-        peso = st.number_input(f'💪 Peso para el Set {i+1}:', min_value=0.0, step=0.1, format="%.1f")
-        pesos.append(peso)
-    repeticiones = [st.number_input(f'🏃 Repeticiones para el Set {i+1}:', min_value=1, max_value=30, step=1) for i in range(Sets)]
-    descanso = st.selectbox('Tiempo de descanso:', ('1-2 min', '2-3 min', '3-4 min'))
-    return pesos, repeticiones, [descanso] * Sets
-
-def formulario_hipertrofia_muscular(Sets):
-    peso = st.number_input('💪 Peso (kg):', min_value=0.0, step=0.1, format="%.1f")
-    repeticiones = st.number_input('Repeticiones:', min_value=1, max_value=30, step=1)
-    descanso = st.selectbox('Tiempo de descanso:', ('1-2 min', '2-3 min', '3-4 min'))
-    return [peso] * Sets, [repeticiones] * Sets, [descanso] * Sets
-
-def download_csv(df, filename):
-    csv = df.to_csv(index=False).encode('utf-8')
-    b64 = b64encode(csv).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}.csv">Descargar {filename}</a>'
-    return href
-
-def calcular_promedio(df):    
-    df['Sets_x_Reps'] = df['Sets'] * df['Repeticiones']
-    df['Peso_Total'] = df['Peso'] * df['Sets'] * df['Repeticiones']
-    df['Suma_Repeticiones'] = df.groupby(['Id_Usuario', 'Dia'])['Repeticiones'].transform('sum')
-    promedio_ponderado_por_persona = df.groupby(['Id_Usuario', 'Dia']).apply(
-        lambda x: x['Peso_Total'].sum() / x['Sets_x_Reps'].sum()
-    ).reset_index(name='Promedio_Ponderado')
-    resultado_final = df[['Id_Usuario', 'Dia', 'Suma_Repeticiones']].drop_duplicates().merge(
-        promedio_ponderado_por_persona, on=['Id_Usuario', 'Dia'])
-    return resultado_final
+USUARIOS_CSV = 'data/Usuarios.csv'
+PROGRESO_CSV = 'data/Progreso.csv'
+CATALOGO_CSV = 'data/Grupo_muscular.csv'
 
 
-def crear_graficos(df_grupo, colores):
-    df_grupo = df_grupo.reset_index(drop=True)
-    if len(df_grupo) == 0:
-        st.warning("No hay suficientes datos disponibles para mostrar los gráficos.")
-        return
+def load_dfs():
+    try:
+        progreso = pd.read_csv(PROGRESO_CSV)
+    except FileNotFoundError:
+        progreso = pd.DataFrame(columns=['Dia', 'Id_Usuario', 'Ejercicio', 'Peso', 'Sets', 'Repeticiones'])
+    try:
+        catalogo = pd.read_csv(CATALOGO_CSV)
+    except FileNotFoundError:
+        catalogo = pd.DataFrame(columns=['Grupo_Muscular', 'Ejercicio'])
+    try:
+        usuarios = pd.read_csv(USUARIOS_CSV)
+    except FileNotFoundError:
+        usuarios = pd.DataFrame(columns=['Id_Usuario', 'Nombre', 'Color', 'Username', 'Password'])
+    return progreso, catalogo, usuarios
 
-    resultado_final = calcular_promedio(df_grupo)
-    resultado_final = resultado_final.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
 
-    # Gráfico de promedio de peso levantado
-    line_chart = alt.Chart(resultado_final).mark_line().encode(
-        x='Dia_ordenado:T',
-        y=alt.Y('Promedio_Ponderado', title='Promedio de Peso'),
-        color=alt.Color('Nombre:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
-        tooltip=['Nombre', 'Dia', 'Promedio_Ponderado']
-    ).properties(
-        title="Promedio de Peso Levantado"
-    )
-    st.altair_chart(line_chart, use_container_width=True)
+def save_df(df: pd.DataFrame, path: str):
+    df.to_csv(path, index=False)
 
-    # Gráfico de total de repeticiones
-    bar_chart = alt.Chart(resultado_final).mark_bar().encode(
-        x='Dia_ordenado:T',
-        y=alt.Y('Suma_Repeticiones', title='Total de Repeticiones'),
-        color=alt.Color('Nombre:N', scale=alt.Scale(domain=['Carlos', 'Cinthia'], range=['black', 'lightblue']), title='Persona'),
-        tooltip=['Nombre', 'Dia', 'Suma_Repeticiones']
-    ).properties(
-        title="Total de Repeticiones"
-    )
-    st.altair_chart(bar_chart, use_container_width=True)
 
-    # Gráficos por grupo muscular
-    if 'Grupo_Muscular' in df_grupo.columns:
-        grupos_musculares = df_grupo['Grupo_Muscular'].unique().tolist()
-        for grupo in grupos_musculares:
-            df_grupo_grupo = df_grupo[df_grupo['Grupo_Muscular'] == grupo]
-            if not df_grupo_grupo.empty:
-                grafica_grupo_muscular = alt.Chart(df_grupo_grupo).mark_line().encode(
-                    x='Dia_ordenado:T',
-                    y='Peso:Q',
-                    color='Nombre:N',
-                    tooltip=['Dia', 'Peso', 'Nombre']
-                ).properties(
-                    title=f"Progreso por {grupo}"
-                )
-                st.altair_chart(grafica_grupo_muscular, use_container_width=True)
-            else:
-                st.warning(f"No hay suficientes datos disponibles para mostrar el gráfico de {grupo}.")
+progreso_df, grupo_muscular_df, usuario_df = load_dfs()
+
+
+# ------ Autenticación ------
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
+    st.session_state['user_id'] = None
+
+
+def login_form():
+    st.header('Iniciar sesión')
+    user = st.text_input('Usuario')
+    pwd = st.text_input('Contraseña', type='password')
+    if st.button('Ingresar'):
+        row = usuario_df[(usuario_df['Username'] == user) & (usuario_df['Password'] == pwd)]
+        if not row.empty:
+            st.session_state['authenticated'] = True
+            st.session_state['user_id'] = row.iloc[0]['Id_Usuario']
+            st.experimental_rerun()
+        else:
+            st.error('Credenciales inválidas')
+
+
+def register_form():
+    st.header('Registro')
+    name = st.text_input('Nombre para mostrar')
+    user = st.text_input('Usuario', key='reg_user')
+    pwd = st.text_input('Contraseña', type='password', key='reg_pwd')
+    if st.button('Registrar'):
+        if user in usuario_df['Username'].values:
+            st.error('El usuario ya existe')
+        else:
+            new_id = f'U{len(usuario_df) + 1}'
+            new_row = {'Id_Usuario': new_id, 'Nombre': name, 'Color': 'gray', 'Username': user, 'Password': pwd}
+            usuario_df.loc[len(usuario_df)] = new_row
+            save_df(usuario_df, USUARIOS_CSV)
+            st.success('Usuario registrado, ahora puede iniciar sesión')
+
+
+def logout():
+    st.session_state['authenticated'] = False
+    st.session_state['user_id'] = None
+    st.experimental_rerun()
+
+
+if not st.session_state['authenticated']:
+    login_form()
+    st.divider()
+    register_form()
+    st.stop()
+
+
+usuario_actual = usuario_df[usuario_df['Id_Usuario'] == st.session_state['user_id']].iloc[0]
+st.sidebar.write(f"Usuario: {usuario_actual['Nombre']}")
+st.sidebar.button('Cerrar sesión', on_click=logout)
+
+st.title('🏋️‍♂️ Registro de Entrenamiento')
+
+# ------ Catálogo de Ejercicios ------
+with st.expander('📚 Catálogo de Ejercicios'):
+    st.dataframe(grupo_muscular_df)
+    with st.form('add_exercise'):
+        grupo = st.text_input('Grupo Muscular')
+        ejercicio = st.text_input('Ejercicio')
+        submitted = st.form_submit_button('Agregar')
+        if submitted and grupo and ejercicio:
+            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio]
+            save_df(grupo_muscular_df, CATALOGO_CSV)
+            st.experimental_rerun()
+    if not grupo_muscular_df.empty:
+        borrar = st.selectbox('Eliminar ejercicio', grupo_muscular_df['Ejercicio'].unique())
+        if st.button('Eliminar'):
+            grupo_muscular_df = grupo_muscular_df[grupo_muscular_df['Ejercicio'] != borrar]
+            save_df(grupo_muscular_df, CATALOGO_CSV)
+            st.experimental_rerun()
+
+# ------ Registro de entrenamiento ------
+with st.expander('📝 Registrar Entrenamiento'):
+    dia = st.text_input('Día')
+    ejercicio = st.selectbox('Ejercicio', grupo_muscular_df['Ejercicio'].unique())
+    sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
+    peso = st.number_input('Peso', min_value=0.0, step=0.1)
+    reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
+    if st.button('Guardar') and dia:
+        nuevo = pd.DataFrame({'Dia': [dia], 'Id_Usuario': [st.session_state['user_id']],
+                             'Ejercicio': [ejercicio], 'Peso': [peso], 'Sets': [sets],
+                             'Repeticiones': [reps]})
+        progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
+        save_df(progreso_df, PROGRESO_CSV)
+        st.success('Entrenamiento guardado')
+
+# ------ Panel de progreso ------
+with st.expander('📊 Progreso'):
+    usuario_datos = progreso_df[progreso_df['Id_Usuario'] == st.session_state['user_id']]
+    if usuario_datos.empty:
+        st.info('Aún no hay datos registrados')
     else:
-        st.warning("No se encontró la columna 'Grupo_Muscular' en el DataFrame.")
+        usuario_datos['Volumen'] = usuario_datos['Peso'] * usuario_datos['Repeticiones'] * usuario_datos['Sets']
+        total_volumen = usuario_datos['Volumen'].sum()
+        dias = usuario_datos['Dia'].nunique()
+        st.metric('Volumen total', f"{total_volumen:.2f}")
+        st.metric('Días registrados', dias)
+        pr = usuario_datos.groupby('Ejercicio')['Peso'].max().reset_index(name='PR')
+        st.subheader('Récords personales')
+        st.dataframe(pr)
+        grafica = alt.Chart(usuario_datos).mark_line().encode(
+            x='Dia:T', y='Peso', color='Ejercicio'
+        )
+        st.altair_chart(grafica, use_container_width=True)
 
-
-# Título de la aplicación
-st.title('🏋️‍♂️ Nuestro Progreso en el Gym 🏋️‍♀️')
-
-# Formulario desplegable y botón de guardar
-with st.expander('📝 Registro de Datos'):
-    Dia = st.text_input('Ingresa el Día 📆:')
-    Persona = st.selectbox('Selecciona tu nombre 🤵‍♂️🙍:', usuario_df['Nombre'].unique())
-    Maquina = st.selectbox('Selecciona una máquina 🏋️‍♀️🏋️‍♂️:', grupo_muscular_df['Maquina'].unique())
-    Enfoque = st.selectbox('Selecciona el enfoque de entrenamiento:', ('Desarrollo de Fuerza', 'Mejora de la Resistencia', 'Hipertrofia Muscular'))
-    Sets = st.number_input('Número de Sets:', min_value=1, max_value=10, step=1, value=4)
-    
-    if Enfoque == 'Desarrollo de Fuerza':
-        pesos, repeticiones, descansos = formulario_desarrollo_fuerza(Sets)
-    elif Enfoque == 'Mejora de la Resistencia':
-        pesos, repeticiones, descansos = formulario_mejora_resistencia(Sets)
-    else:
-        pesos, repeticiones, descansos = formulario_hipertrofia_muscular(Sets)
-        
-    form_completo = all(pesos) and all(repeticiones) and all(descansos)
-    
-    if form_completo:
-        if st.button('Guardar'):
-            progreso_new = pd.DataFrame({
-                'Dia': [Dia] * Sets,
-                'Id_Usuario': usuario_df[usuario_df['Nombre'] == Persona]['Id_Usuario'].values[0],
-                'Maquina': [Maquina] * Sets,
-                'Sets': [Sets] * Sets,
-                'Peso': pesos,
-                'Repeticiones': repeticiones,
-                'Descanso': descansos
-            })
-            progreso_df = pd.concat([progreso_df, progreso_new], ignore_index=True)
-            progreso_df.to_csv('/mnt/data/Progreso.csv', index=False)
-            st.success('¡Datos registrados con éxito!')
-            st.markdown(download_csv(progreso_df, 'Progreso_Actualizado'), unsafe_allow_html=True)
-
-# Visualización de datos registrados
-with st.expander('📓 Datos Registrados'):
-    st.subheader("Visualización de datos registrados")
-    datos_visualizacion = progreso_df[['Dia', 'Nombre', 'Maquina', 'Sets', 'Repeticiones']]
-    st.dataframe(datos_visualizacion)
-    st.markdown(download_csv(progreso_df, 'Progreso_Completo'), unsafe_allow_html=True)
-
-# Visualización de gráficos
-with st.expander('📊 Visualización de Gráficos'):
-    st.subheader("Datos de Gráficos por Persona y Maquina")
-    opcion_persona = st.selectbox('Selecciona una persona para graficar:', usuario_df['Nombre'].unique())
-    progreso_persona = progreso_df[progreso_df['Nombre'] == opcion_persona]
-    crear_graficos(progreso_persona, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
-    
-    # Gráficos por grupo muscular
-    st.subheader("Datos de Gráficos por Grupo Muscular")
-    if 'Grupo_Muscular' in progreso_df.columns:
-        grupos_musculares = progreso_df['Grupo_Muscular'].unique().tolist()
-        for grupo in grupos_musculares:
-            st.write(f"Grupo Muscular: {grupo}")
-            progreso_grupo = progreso_df[progreso_df['Grupo_Muscular'] == grupo]
-            crear_graficos(progreso_grupo, colores={'Carlos': 'black', 'Cinthia': 'lightblue'})
-    else:
-        st.warning("No hay suficientes datos disponibles para mostrar los gráficos por grupo muscular.")

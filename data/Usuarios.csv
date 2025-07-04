@@ -1,3 +1,3 @@
-﻿Id_Usuario,Nombre,Color
-C1,Carlos,Black
-C2,Cinthia,Light blue
+Id_Usuario,Nombre,Color,Username,Password
+C1,Carlos,Black,carlos,password1
+C2,Cinthia,Light blue,cinthia,password2
