@@ -1,6 +1,13 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+from datetime import date
+
+st.set_page_config(
+    page_title="Gym & Running Tracker",
+    page_icon="🏃",
+    layout="centered",
+)
 
 USUARIOS_CSV = 'data/Usuarios.csv'
 PROGRESO_CSV = 'data/Progreso.csv'
@@ -92,42 +99,29 @@ if not st.session_state['authenticated']:
     register_form()
     st.stop()
 
-
 usuario_actual = usuario_df[usuario_df['Id_Usuario'] == st.session_state['user_id']].iloc[0]
 st.sidebar.write(f"Usuario: {usuario_actual['Nombre']}")
 st.sidebar.button('Cerrar sesión', on_click=logout)
 
+rem_date = st.sidebar.date_input(
+    'Próximo entrenamiento',
+    st.session_state.get('next_workout', date.today())
+)
+if st.sidebar.button('Guardar recordatorio'):
+    st.session_state['next_workout'] = rem_date
+    st.sidebar.success('Recordatorio guardado')
+if st.session_state.get('next_workout'):
+    st.sidebar.info(f"Próximo entrenamiento: {st.session_state['next_workout']}")
+
 st.title('🏋️‍♂️ Registro de Entrenamiento')
 
-# ------ Catálogo de Ejercicios ------
-with st.expander('📚 Catálogo de Ejercicios'):
-    st.dataframe(grupo_muscular_df)
-    with st.form('add_exercise'):
-        grupo = st.text_input('Grupo Muscular')
-        ejercicio = st.text_input('Ejercicio')
-        tipo_ej = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
-        submitted = st.form_submit_button('Agregar')
-        if submitted and grupo and ejercicio:
-            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
-            save_df(grupo_muscular_df, CATALOGO_CSV)
-            try:
-                st.experimental_rerun()
-            except Exception:
-                pass
-    if not grupo_muscular_df.empty:
-        borrar = st.selectbox('Eliminar ejercicio', grupo_muscular_df['Ejercicio'].unique())
-        if st.button('Eliminar'):
-            grupo_muscular_df = grupo_muscular_df[grupo_muscular_df['Ejercicio'] != borrar]
-            save_df(grupo_muscular_df, CATALOGO_CSV)
-            try:
-                st.experimental_rerun()
-            except Exception:
-                pass
+tabs = st.tabs(['Registro', 'Progreso', 'Catálogo', 'Sincronización'])
 
-# ------ Registro de entrenamiento ------
-with st.expander('📝 Registrar Entrenamiento'):
+with tabs[0]:
+    st.header('📝 Registrar Entrenamiento')
     tipo = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
     dia = st.text_input('Día')
+    nota = st.text_area('Notas', key='nota')
     if tipo == 'Gimnasio':
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Gimnasio']['Ejercicio']
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
@@ -157,6 +151,7 @@ with st.expander('📝 Registrar Entrenamiento'):
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
         distancia = st.number_input('Distancia (km)', min_value=0.0, step=0.1)
         tiempo = st.number_input('Tiempo (min)', min_value=0.0, step=1.0)
+        ruta = st.file_uploader('Ruta GPX/CSV (opcional)', type=['gpx', 'csv'])
         if st.button('Guardar') and dia:
             nuevo = pd.DataFrame({
                 'Dia': [dia],
@@ -173,9 +168,16 @@ with st.expander('📝 Registrar Entrenamiento'):
             progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
             save_df(progreso_df, PROGRESO_CSV)
             st.success('Entrenamiento guardado')
+        if ruta is not None:
+            try:
+                coords = pd.read_csv(ruta)
+                if {'lat', 'lon'}.issubset(coords.columns):
+                    st.map(coords[['lat', 'lon']])
+            except Exception:
+                pass
 
-# ------ Panel de progreso ------
-with st.expander('📊 Progreso'):
+with tabs[1]:
+    st.header('📊 Progreso')
     usuario_datos = progreso_df[progreso_df['Id_Usuario'] == st.session_state['user_id']]
     if usuario_datos.empty:
         st.info('Aún no hay datos registrados')
@@ -251,11 +253,51 @@ with st.expander('📊 Progreso'):
         graf_comp = alt.Chart(comp).mark_bar().encode(x='Nombre', y='Peso_kg')
         st.altair_chart(graf_comp, use_container_width=True)
 
-    with st.expander('🚧 En progreso'):
-        st.markdown(
-            '- Seguimiento de entrenamientos personalizados\n'
-            '- Módulo de running con GPS\n'
-            '- Notificaciones y recordatorios\n'
-            '- Sincronización con plataformas de salud'
-        )
+        with st.expander('🚧 En progreso'):
+            st.markdown(
+                '- Seguimiento de entrenamientos personalizados\n'
+                '- Módulo de running con GPS\n'
+                '- Notificaciones y recordatorios\n'
+                '- Sincronización con plataformas de salud'
+            )
+
+with tabs[2]:
+    st.header('📚 Catálogo de Ejercicios')
+    st.dataframe(grupo_muscular_df)
+    with st.form('add_exercise'):
+        grupo = st.text_input('Grupo Muscular')
+        ejercicio = st.text_input('Ejercicio')
+        tipo_ej = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
+        submitted = st.form_submit_button('Agregar')
+        if submitted and grupo and ejercicio:
+            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
+            save_df(grupo_muscular_df, CATALOGO_CSV)
+            try:
+                st.experimental_rerun()
+            except Exception:
+                pass
+    if not grupo_muscular_df.empty:
+        borrar = st.selectbox('Eliminar ejercicio', grupo_muscular_df['Ejercicio'].unique())
+        if st.button('Eliminar'):
+            grupo_muscular_df = grupo_muscular_df[grupo_muscular_df['Ejercicio'] != borrar]
+            save_df(grupo_muscular_df, CATALOGO_CSV)
+            try:
+                st.experimental_rerun()
+            except Exception:
+                pass
+
+with tabs[3]:
+    st.header('🔄 Sincronización')
+    csv_data = progreso_df.to_csv(index=False).encode('utf-8')
+    st.download_button('Descargar historial', csv_data, 'progreso.csv', 'text/csv')
+    archivo = st.file_uploader('Importar CSV', type='csv')
+    if archivo is not None:
+        try:
+            nuevos = pd.read_csv(archivo)
+            progreso_df = pd.concat([progreso_df, nuevos], ignore_index=True)
+            save_df(progreso_df, PROGRESO_CSV)
+            st.success('Datos importados')
+        except Exception as e:
+            st.error(f'Error al importar: {e}')
+
 
