@@ -129,7 +129,7 @@ tabs = st.tabs(['Registro', 'Progreso', 'Catálogo', 'Sincronización'])
 with tabs[0]:
     st.header('📝 Registrar Entrenamiento')
     tipo = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
-    dia = st.text_input('Día')
+    dia = st.date_input('Día', date.today())
     nota = st.text_area('Notas', key='nota')
     if tipo == 'Gimnasio':
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Gimnasio']['Ejercicio']
@@ -143,9 +143,10 @@ with tabs[0]:
         with c3:
             reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
         if st.button('Guardar') and dia:
+            dia_str = dia.strftime('%Y-%m-%d') if isinstance(dia, date) else str(dia)
             peso_kg = peso * 0.453592 if unidad == 'lb' else peso
             nuevo = pd.DataFrame({
-                'Dia': [dia],
+                'Dia': [dia_str],
                 'Id_Usuario': [st.session_state['user_id']],
                 'Ejercicio': [ejercicio],
                 'Peso': [peso_kg],
@@ -169,8 +170,9 @@ with tabs[0]:
             tiempo = st.number_input('Tiempo (min)', min_value=0.0, step=1.0)
         ruta = st.file_uploader('Ruta GPX/CSV (opcional)', type=['gpx', 'csv'])
         if st.button('Guardar') and dia:
+            dia_str = dia.strftime('%Y-%m-%d') if isinstance(dia, date) else str(dia)
             nuevo = pd.DataFrame({
-                'Dia': [dia],
+                'Dia': [dia_str],
                 'Id_Usuario': [st.session_state['user_id']],
                 'Ejercicio': [ejercicio],
                 'Peso': [0],
@@ -206,9 +208,13 @@ with tabs[1]:
         gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
         total_volumen = gimnasio['Volumen'].sum()
         dias = usuario_datos['Dia'].nunique()
-        colm1, colm2 = st.columns(2)
+        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
+        semanas = gimnasio['Fecha'].dt.to_period('W').nunique()
+        consistencia = dias / semanas if semanas else 0
+        colm1, colm2, colm3 = st.columns(3)
         colm1.metric('Volumen total', f"{total_volumen:.2f} kg")
         colm2.metric('Días registrados', dias)
+        colm3.metric('Consistencia (d/sem)', f"{consistencia:.1f}")
 
         gimnasio['1RM'] = gimnasio['Peso_kg'] * (1 + gimnasio['Repeticiones'] / 30)
         max_1rm = gimnasio.groupby('Ejercicio')['1RM'].max().reset_index(name='Proyección 1RM')
@@ -246,7 +252,6 @@ with tabs[1]:
         )
         st.altair_chart(graf_vol, use_container_width=True)
 
-        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
         gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
         semanal = gimnasio.groupby('Semana')['Volumen'].sum().reset_index()
         st.subheader('Volumen semanal')
@@ -330,12 +335,19 @@ with tabs[2]:
         tipo_ej = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
         submitted = st.form_submit_button('Agregar')
         if submitted and grupo and ejercicio:
-            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
-            save_df(grupo_muscular_df, CATALOGO_CSV)
-            try:
-                st.experimental_rerun()
-            except Exception:
-                pass
+            existe = not grupo_muscular_df[
+                (grupo_muscular_df['Grupo_Muscular'] == grupo) &
+                (grupo_muscular_df['Ejercicio'] == ejercicio)
+            ].empty
+            if existe:
+                st.warning('El ejercicio ya existe')
+            else:
+                grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
+                save_df(grupo_muscular_df, CATALOGO_CSV)
+                try:
+                    st.experimental_rerun()
+                except Exception:
+                    pass
     if not grupo_muscular_df.empty:
         borrar = st.selectbox('Eliminar ejercicio', grupo_muscular_df['Ejercicio'].unique())
         if st.button('Eliminar'):
