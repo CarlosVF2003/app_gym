@@ -13,8 +13,11 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        body {font-family: 'Segoe UI', sans-serif;}
+        body {font-family: 'Segoe UI', sans-serif; background-color: var(--backgr\
+ound-color);} 
         .block-container {padding-top: 2rem;}
+        [data-testid=stMetric] {background:#222;border-radius:4px;padding:0.5em;\
+ color:#fff;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -197,188 +200,111 @@ with tabs[0]:
 
 with tabs[1]:
     st.header('📊 Progreso')
-    usuario_datos = progreso_df[progreso_df['Id_Usuario'] == st.session_state['user_id']]
-    if usuario_datos.empty:
+    data_user = progreso_df[progreso_df['Id_Usuario'] == st.session_state['user_id']].copy()
+    if data_user.empty:
         st.info('Aún no hay datos registrados')
     else:
-        gimnasio = usuario_datos[usuario_datos['Tipo'] == 'Gimnasio'].copy()
-        gimnasio['Peso_kg'] = gimnasio.apply(
-            lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592,
-            axis=1,
-        )
-        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
-        min_d, max_d = gimnasio['Fecha'].min(), gimnasio['Fecha'].max()
-        rango = st.date_input('Rango de fechas', [min_d, max_d])
-        if len(rango) == 2:
-            start, end = pd.to_datetime(rango[0]), pd.to_datetime(rango[1])
-            gimnasio = gimnasio[(gimnasio['Fecha'] >= start) & (gimnasio['Fecha'] <= end)]
+        data_user['Fecha'] = pd.to_datetime(data_user['Dia'], errors='coerce')
+        rango_opt = st.selectbox('Rango', ['Hoy', '7 días', '30 días', 'Personalizado'])
+        hoy = pd.to_datetime(date.today())
+        if rango_opt == 'Hoy':
+            inicio, fin = hoy, hoy
+        elif rango_opt == '7 días':
+            inicio, fin = hoy - pd.Timedelta(days=6), hoy
+        elif rango_opt == '30 días':
+            inicio, fin = hoy - pd.Timedelta(days=29), hoy
+        else:
+            r = st.date_input('Selecciona rango', [data_user['Fecha'].min(), data_user['Fecha'].max()])
+            inicio, fin = pd.to_datetime(r[0]), pd.to_datetime(r[1]) if len(r) == 2 else (data_user['Fecha'].min(), data_user['Fecha'].max())
+        periodo = (fin - inicio).days + 1
+        datos_periodo = data_user[(data_user['Fecha'] >= inicio) & (data_user['Fecha'] <= fin)]
+        prev = data_user[(data_user['Fecha'] >= inicio - pd.Timedelta(days=periodo)) & (data_user['Fecha'] < inicio)]
 
-        ejercicios_disp = ['Todos'] + sorted(gimnasio['Ejercicio'].unique())
-        ejercicio_sel = st.selectbox('Filtrar por ejercicio', ejercicios_disp)
-        datos = gimnasio if ejercicio_sel == 'Todos' else gimnasio[gimnasio['Ejercicio'] == ejercicio_sel]
-        gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
-        total_volumen = gimnasio['Volumen'].sum()
-        dias = usuario_datos['Dia'].nunique()
-        semanas = gimnasio['Fecha'].dt.to_period('W').nunique()
-        consistencia = dias / semanas if semanas else 0
-        colm1, colm2, colm3 = st.columns(3)
-        colm1.metric('Volumen total', f"{total_volumen:.2f} kg")
-        colm2.metric('Días registrados', dias)
-        colm3.metric('Consistencia (d/sem)', f"{consistencia:.1f}")
+        c1, c2 = st.columns(2)
+        show_gym = c1.checkbox('Gimnasio', True)
+        show_run = c2.checkbox('Carrera', True)
+        datos_sel = datos_periodo[(datos_periodo['Tipo'] == 'Gimnasio') & show_gym | (datos_periodo['Tipo'] == 'Carrera') & show_run]
 
-        gimnasio['1RM'] = gimnasio['Peso_kg'] * (1 + gimnasio['Repeticiones'] / 30)
-        max_1rm = gimnasio.groupby('Ejercicio')['1RM'].max().reset_index(name='Proyección 1RM')
-        st.subheader('Proyección de 1RM por ejercicio')
-        st.dataframe(max_1rm)
+        gym = datos_sel[datos_sel['Tipo'] == 'Gimnasio'].copy()
+        gym['Peso_kg'] = gym.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        gym['Volumen'] = gym['Peso_kg'] * gym['Repeticiones'] * gym['Sets']
+        run = datos_sel[datos_sel['Tipo'] == 'Carrera']
 
-        pr = gimnasio.groupby('Ejercicio')['Peso_kg'].max().reset_index(name='PR (kg)')
-        st.subheader('Récords personales')
-        st.dataframe(pr)
-        pr_chart = (
-            alt.Chart(pr)
-            .mark_bar()
-            .encode(x='Ejercicio', y='PR (kg)', tooltip=['PR (kg)'])
-            .interactive()
-        )
-        st.altair_chart(pr_chart, use_container_width=True)
+        prev_gym = prev[prev['Tipo'] == 'Gimnasio'].copy()
+        prev_gym['Peso_kg'] = prev_gym.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        prev_gym['Volumen'] = prev_gym['Peso_kg'] * prev_gym['Repeticiones'] * prev_gym['Sets']
+        prev_run = prev[prev['Tipo'] == 'Carrera']
 
-        st.subheader('Peso promedio por ejercicio')
-        promedio = gimnasio.groupby('Ejercicio')['Peso_kg'].mean().reset_index(name='Promedio (kg)')
-        st.dataframe(promedio)
-        prom_chart = (
-            alt.Chart(promedio)
-            .mark_bar()
-            .encode(x='Ejercicio', y='Promedio (kg)', tooltip=['Promedio (kg)'])
-            .interactive()
-        )
-        st.altair_chart(prom_chart, use_container_width=True)
+        total_vol = gym['Volumen'].sum()
+        prev_vol = prev_gym['Volumen'].sum()
+        delta_vol = total_vol - prev_vol
 
-        grafica = (
-            alt.Chart(datos)
-            .mark_line(point=True)
-            .encode(
-                x='Dia:T',
-                y='Peso_kg',
-                color='Ejercicio',
-                tooltip=['Dia', 'Ejercicio', 'Peso_kg']
-            )
-            .interactive()
-        )
-        st.altair_chart(grafica, use_container_width=True)
+        total_km = run['Distancia'].sum()
+        prev_km = prev_run['Distancia'].sum()
+        delta_km = total_km - prev_km
 
-        volumen_ej = gimnasio.groupby('Ejercicio')['Volumen'].sum().reset_index()
-        st.subheader('Volumen total por ejercicio')
-        graf_vol = (
-            alt.Chart(volumen_ej)
-            .mark_bar()
-            .encode(x='Ejercicio', y='Volumen', tooltip=['Volumen'])
-            .interactive()
-        )
-        st.altair_chart(graf_vol, use_container_width=True)
+        sesiones = datos_sel['Fecha'].nunique()
 
-        join = gimnasio.merge(
-            grupo_muscular_df[['Ejercicio', 'Grupo_Muscular']],
-            on='Ejercicio',
-            how='left',
-        )
-        grupo_vol = join.groupby('Grupo_Muscular')['Volumen'].sum().reset_index()
-        st.subheader('Volumen por grupo muscular')
-        graf_grupo = (
-            alt.Chart(grupo_vol)
-            .mark_bar()
-            .encode(x='Grupo_Muscular', y='Volumen', tooltip=['Volumen'])
-            .interactive()
-        )
-        st.altair_chart(graf_grupo, use_container_width=True)
+        gym['1RM'] = gym['Peso_kg'] * (1 + gym['Repeticiones'] / 30)
+        if not gym.empty:
+            pr_row = gym.loc[gym['1RM'].idxmax()]
+            ultimo_pr = f"{pr_row['Ejercicio']} {pr_row['1RM']:.1f} kg"
+        elif not run.empty:
+            ultimo_pr = f"Distancia máx {run['Distancia'].max():.1f} km"
+        else:
+            ultimo_pr = '-'
 
-        gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
-        semanal = gimnasio.groupby('Semana')['Volumen'].sum().reset_index()
-        st.subheader('Volumen semanal')
-        graf_sem = (
-            alt.Chart(semanal)
-            .mark_line(point=True)
-            .encode(x='Semana', y='Volumen', tooltip=['Semana', 'Volumen'])
-            .interactive()
-        )
-        st.altair_chart(graf_sem, use_container_width=True)
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric('Carga total', f"{total_vol:.1f} kg", f"{delta_vol:+.1f}")
+        m2.metric('Distancia', f"{total_km:.1f} km", f"{delta_km:+.1f}")
+        m3.metric('Sesiones', sesiones)
+        m4.metric('Último PR', ultimo_pr)
 
-        avg_sem = gimnasio.groupby(['Semana', 'Ejercicio'])['Peso_kg'].mean().reset_index()
-        st.subheader('Peso promedio semanal')
-        graf_avg = (
-            alt.Chart(avg_sem)
-            .mark_line(point=True)
-            .encode(
-                x='Semana',
-                y='Peso_kg',
-                color='Ejercicio',
-                tooltip=['Semana', 'Ejercicio', 'Peso_kg'],
-            )
-            .interactive()
-        )
-        st.altair_chart(graf_avg, use_container_width=True)
-
-        gimnasio['Mes'] = gimnasio['Fecha'].dt.to_period('M').astype(str)
-        mensual = gimnasio.groupby('Mes')['Volumen'].sum().reset_index()
-        st.subheader('Volumen mensual')
-        graf_mens = (
-            alt.Chart(mensual)
-            .mark_bar()
-            .encode(x='Mes', y='Volumen', tooltip=['Volumen'])
-            .interactive()
-        )
-        st.altair_chart(graf_mens, use_container_width=True)
-
-        carreras = usuario_datos[usuario_datos['Tipo'] == 'Carrera']
-        if not carreras.empty:
-            total_km = carreras['Distancia'].sum()
-            st.metric('Kilómetros acumulados', f"{total_km:.2f} km")
-            graf_km = (
-                alt.Chart(carreras)
-                .mark_line(point=True)
-                .encode(
-                    x='Dia:T',
-                    y='Distancia',
-                    color='Ejercicio',
-                    tooltip=['Dia', 'Distancia', 'Ejercicio']
+        # --- Gráficas Gimnasio ---
+        if show_gym and not gym.empty:
+            claves = ['Press de pecho', 'Sentadilla', 'Peso muerto']
+            datos_clave = gym[gym['Ejercicio'].isin(claves)]
+            if not datos_clave.empty:
+                max_chart = (
+                    alt.Chart(datos_clave)
+                    .mark_line(point=True)
+                    .encode(x='Fecha:T', y='Peso_kg', color='Ejercicio', tooltip=['Fecha', 'Peso_kg'])
+                    .interactive()
                 )
-                .interactive()
-            )
-            st.altair_chart(graf_km, use_container_width=True)
+                st.altair_chart(max_chart, use_container_width=True)
 
-            carreras['Fecha'] = pd.to_datetime(carreras['Dia'], errors='coerce')
-            carreras['Semana'] = carreras['Fecha'].dt.to_period('W').astype(str)
-            run_sem = carreras.groupby('Semana')['Distancia'].sum().reset_index()
-            st.subheader('Distancia semanal')
-            graf_run_sem = (
-                alt.Chart(run_sem)
+            join = gym.merge(grupo_muscular_df[['Ejercicio', 'Grupo_Muscular']], on='Ejercicio', how='left')
+            join['Semana'] = join['Fecha'].dt.to_period('W').astype(str)
+            grupo_vol = join.groupby(['Semana', 'Grupo_Muscular'])['Volumen'].sum().reset_index()
+            stack = alt.Chart(grupo_vol).mark_bar().encode(x='Semana', y='Volumen', color='Grupo_Muscular')
+            st.altair_chart(stack, use_container_width=True)
+
+        # --- Gráficas Running ---
+        if show_run and not run.empty:
+            line_dist = (
+                alt.Chart(run)
                 .mark_line(point=True)
-                .encode(x='Semana', y='Distancia', tooltip=['Semana', 'Distancia'])
+                .encode(x='Fecha:T', y='Distancia', tooltip=['Fecha', 'Distancia'])
                 .interactive()
             )
-            st.altair_chart(graf_run_sem, use_container_width=True)
+            st.altair_chart(line_dist, use_container_width=True)
 
-        st.subheader('Comparativa con otros usuarios')
-        ejercicio_comp = st.selectbox('Ejercicio', progreso_df['Ejercicio'].unique())
-        pr_usuarios = progreso_df[progreso_df['Tipo'] == 'Gimnasio']
-        pr_usuarios['Peso_kg'] = pr_usuarios.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
-        comp = pr_usuarios[pr_usuarios['Ejercicio'] == ejercicio_comp]
-        comp = comp.groupby('Id_Usuario')['Peso_kg'].max().reset_index()
-        comp = comp.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
-        graf_comp = (
-            alt.Chart(comp)
-            .mark_bar()
-            .encode(x='Nombre', y='Peso_kg', tooltip=['Nombre', 'Peso_kg'])
-            .interactive()
-        )
-        st.altair_chart(graf_comp, use_container_width=True)
+            run = run[run['Distancia'] > 0]
+            if not run.empty:
+                run['ritmo'] = run['Tiempo'] / run['Distancia']
+                area_pace = (
+                    alt.Chart(run)
+                    .mark_area(opacity=0.3)
+                    .encode(x='Fecha:T', y='ritmo', tooltip=['Fecha', 'ritmo'])
+                    .interactive()
+                )
+                st.altair_chart(area_pace, use_container_width=True)
 
-        with st.expander('🚧 En progreso'):
-            st.markdown(
-                '- Seguimiento de entrenamientos personalizados\n'
-                '- Módulo de running con GPS\n'
-                '- Notificaciones y recordatorios\n'
-                '- Sincronización con plataformas de salud'
-            )
+        # --- Últimas sesiones ---
+        st.subheader('Últimas sesiones')
+        ultimas = datos_sel.sort_values('Fecha', ascending=False).head(10)
+        st.dataframe(ultimas[['Dia', 'Ejercicio', 'Peso', 'Distancia', 'Tipo']])
+
 
 with tabs[2]:
     st.header('📚 Catálogo de Ejercicios')
