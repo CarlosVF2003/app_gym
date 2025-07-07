@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 from datetime import date
+import time
 
 st.set_page_config(
     page_title="Gym & Running Tracker",
@@ -26,6 +27,8 @@ ound-color);}
 USUARIOS_CSV = 'data/Usuarios.csv'
 PROGRESO_CSV = 'data/Progreso.csv'
 CATALOGO_CSV = 'data/Grupo_muscular.csv'
+PESO_CSV = 'data/Peso.csv'
+RUTINAS_CSV = 'data/Rutinas.csv'
 
 
 def load_dfs():
@@ -49,14 +52,22 @@ def load_dfs():
         usuarios = pd.read_csv(USUARIOS_CSV)
     except FileNotFoundError:
         usuarios = pd.DataFrame(columns=['Id_Usuario', 'Nombre', 'Color', 'Username', 'Password'])
-    return progreso, catalogo, usuarios
+    try:
+        peso = pd.read_csv(PESO_CSV)
+    except FileNotFoundError:
+        peso = pd.DataFrame(columns=['Id_Usuario', 'Fecha', 'Peso', 'Cintura', 'Pecho', 'Foto'])
+    try:
+        rutina = pd.read_csv(RUTINAS_CSV)
+    except FileNotFoundError:
+        rutina = pd.DataFrame(columns=['Nombre', 'Ejercicio', 'Sets', 'Reps'])
+    return progreso, catalogo, usuarios, peso, rutina
 
 
 def save_df(df: pd.DataFrame, path: str):
     df.to_csv(path, index=False)
 
 
-progreso_df, grupo_muscular_df, usuario_df = load_dfs()
+progreso_df, grupo_muscular_df, usuario_df, peso_df, rutina_df = load_dfs()
 
 
 # ------ Autenticación ------
@@ -127,17 +138,28 @@ if st.session_state.get('next_workout'):
 
 st.title('🏋️‍♂️ Registro de Entrenamiento')
 
-tabs = st.tabs(['Registro', 'Progreso', 'Catálogo', 'Sincronización'])
+tabs = st.tabs([
+    'Registro',
+    'Progreso',
+    'Catálogo',
+    'Rutinas',
+    'Peso y Medidas',
+    'Calendario',
+    'Sincronización',
+])
 
 with tabs[0]:
     st.header('📝 Registrar Entrenamiento')
     tipo = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
     dia = st.date_input('Día', date.today())
     nota = st.text_area('Notas', key='nota')
+    rutina_sel = st.selectbox('Rutina', ['Ninguna'] + sorted(rutina_df['Nombre'].unique()))
+    if rutina_sel != 'Ninguna':
+        st.dataframe(rutina_df[rutina_df['Nombre'] == rutina_sel][['Ejercicio', 'Sets', 'Reps']])
     if tipo == 'Gimnasio':
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Gimnasio']['Ejercicio']
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
         with c2:
@@ -145,6 +167,8 @@ with tabs[0]:
             peso = st.number_input('Peso', min_value=0.0, step=0.1)
         with c3:
             reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
+        with c4:
+            descanso = st.slider('Descanso (s)', 30, 120, 60)
         if st.button('Guardar') and dia:
             dia_str = dia.strftime('%Y-%m-%d') if isinstance(dia, date) else str(dia)
             nuevo = pd.DataFrame({
@@ -163,6 +187,11 @@ with tabs[0]:
             progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
             save_df(progreso_df, PROGRESO_CSV)
             st.success('Entrenamiento guardado')
+            place = st.empty()
+            for i in range(descanso, 0, -1):
+                place.write(f'Descanso... {i}s')
+                time.sleep(1)
+            place.write('¡Listo!')
     else:
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Carrera']['Ejercicio']
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
@@ -278,6 +307,25 @@ with tabs[1]:
         m4.metric('Último PR', ultimo_pr)
         m5.metric('Consistencia', f"{promedio_semana:.1f}/sem")
 
+        peso_user = peso_df[peso_df['Id_Usuario'] == st.session_state['user_id']]
+        if not peso_user.empty:
+            peso_user['Fecha'] = pd.to_datetime(peso_user['Fecha'])
+            peso_line = alt.Chart(peso_user).mark_line(point=True).encode(x='Fecha:T', y='Peso')
+            st.altair_chart(peso_line, use_container_width=True)
+
+        otros = st.multiselect('Comparar con', usuario_df['Nombre'])
+        if otros:
+            otros_ids = usuario_df[usuario_df['Nombre'].isin(otros)]['Id_Usuario']
+            comp = progreso_df[progreso_df['Id_Usuario'].isin(otros_ids) & (progreso_df['Tipo']=='Gimnasio')].copy()
+            if not comp.empty:
+                comp['Fecha'] = pd.to_datetime(comp['Dia'], errors='coerce')
+                comp['Peso_kg'] = comp.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+                comp['Volumen'] = comp['Peso_kg'] * comp['Repeticiones'] * comp['Sets']
+                resumen = comp.groupby(['Fecha','Id_Usuario'])['Volumen'].sum().reset_index()
+                resumen['Nombre'] = resumen['Id_Usuario'].map(usuario_df.set_index('Id_Usuario')['Nombre'])
+                chart_comp = alt.Chart(resumen).mark_line().encode(x='Fecha:T', y='Volumen', color='Nombre')
+                st.altair_chart(chart_comp, use_container_width=True)
+
         # --- Gráficas Gimnasio ---
         if show_gym and not gym.empty:
             claves = ['Press de pecho', 'Sentadilla', 'Peso muerto']
@@ -357,6 +405,70 @@ with tabs[2]:
                 pass
 
 with tabs[3]:
+    st.header('📓 Rutinas')
+    if not rutina_df.empty:
+        st.dataframe(rutina_df)
+    with st.form('add_routine'):
+        nombre_r = st.text_input('Nombre de la rutina')
+        ejercicio_r = st.selectbox('Ejercicio', grupo_muscular_df['Ejercicio'].unique())
+        sets_r = st.number_input('Sets', 1, 10, 1)
+        reps_r = st.number_input('Reps', 1, 50, 10)
+        if st.form_submit_button('Agregar a rutina') and nombre_r:
+            rutina_df.loc[len(rutina_df)] = [nombre_r, ejercicio_r, sets_r, reps_r]
+            save_df(rutina_df, RUTINAS_CSV)
+            st.success('Guardado')
+    if not rutina_df.empty:
+        borrar_r = st.selectbox('Eliminar entrada', rutina_df.index)
+        if st.button('Borrar entrada'):
+            rutina_df = rutina_df.drop(borrar_r)
+            save_df(rutina_df, RUTINAS_CSV)
+            st.experimental_rerun()
+
+with tabs[4]:
+    st.header('⚖️ Peso y Medidas')
+    peso_val = st.number_input('Peso (kg)', min_value=0.0, step=0.1)
+    cin = st.number_input('Cintura (cm)', min_value=0.0, step=0.1)
+    pecho = st.number_input('Pecho (cm)', min_value=0.0, step=0.1)
+    if st.button('Guardar peso'):
+        nuevo = pd.DataFrame({
+            'Id_Usuario': [st.session_state['user_id']],
+            'Fecha': [date.today().strftime('%Y-%m-%d')],
+            'Peso': [peso_val],
+            'Cintura': [cin if cin else None],
+            'Pecho': [pecho if pecho else None],
+            'Foto': [None],
+        })
+        peso_df = pd.concat([peso_df, nuevo], ignore_index=True)
+        save_df(peso_df, PESO_CSV)
+        st.success('Guardado')
+    if not peso_df.empty:
+        peso_user = peso_df[peso_df['Id_Usuario'] == st.session_state['user_id']]
+        if not peso_user.empty:
+            peso_user['Fecha'] = pd.to_datetime(peso_user['Fecha'])
+            line_peso = alt.Chart(peso_user).mark_line(point=True).encode(x='Fecha:T', y='Peso')
+            st.altair_chart(line_peso, use_container_width=True)
+
+with tabs[5]:
+    st.header('📅 Calendario')
+    cal_user = progreso_df[progreso_df['Id_Usuario'] == st.session_state['user_id']]
+    if cal_user.empty:
+        st.info('Sin registros')
+    else:
+        cal_user['Fecha'] = pd.to_datetime(cal_user['Dia'])
+        resumen = cal_user.groupby('Fecha').size().reset_index(name='sesiones')
+        resumen['dow'] = resumen['Fecha'].dt.day
+        resumen['month'] = resumen['Fecha'].dt.month
+        heat = alt.Chart(resumen).mark_rect().encode(
+            x=alt.X('dow:O', title='Día'),
+            y=alt.Y('month:O', title='Mes'),
+            color=alt.Color('sesiones:Q', scale=alt.Scale(scheme='greens')),
+            tooltip=['Fecha', 'sesiones'],
+        )
+        st.altair_chart(heat, use_container_width=True)
+        freq = resumen['Fecha'].dt.isocalendar().week.value_counts().mean()
+        st.metric('Frecuencia semanal', f'{freq:.1f} días')
+
+with tabs[6]:
     st.header('🔄 Sincronización')
     csv_data = progreso_df.to_csv(index=False).encode('utf-8')
     st.download_button('Descargar historial', csv_data, 'progreso.csv', 'text/csv')
