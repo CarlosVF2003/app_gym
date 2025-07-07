@@ -1,160 +1,160 @@
-Dia,Id_Usuario,Ejercicio,Peso,Sets,Repeticiones
-1,C1,Press de pecho,26,1,15
-1,C1,Press de pecho,33,2,15
-1,C1,Press de pecho,38,1,15
-1,C2,Press de pecho,5,1,15
-1,C2,Press de pecho,12,3,15
-1,C1,Extensión de hombro,15,3,15
-1,C2,Extensión de hombro,5,3,15
-1,C1,Extensión de tríceps en polea,13.75,1,15
-1,C1,Extensión de tríceps en polea,16.25,3,15
-1,C2,Extensión de tríceps en polea,6.25,4,15
-1,C1,Extensión lateral,6.25,3,10
-1,C2,Extensión lateral,1.25,3,10
-1,C1,Extensión frontal,3.75,3,10
-1,C2,Extensión frontal,1.25,3,10
-2,C1,Peso muerto,22,4,15
-2,C1,Leg Curl,47.5,4,20
-2,C1,Abducción,50,1,20
-2,C1,Abducción,60,1,20
-2,C1,Abducción,70,1,20
-2,C1,Abducción,80,1,20
-2,C1,Glúteo en maquina,30,1,15
-2,C1,Glúteo en maquina,32.5,1,15
-2,C1,Glúteo en maquina,35,1,15
-2,C2,Peso muerto,10,4,15
-2,C2,Leg Curl,17.5,1,20
-2,C2,Leg Curl,20,3,20
-2,C2,Abducción,27.5,1,15
-2,C2,Abducción,30,2,15
-2,C2,Abducción,35,1,15
-2,C2,Glúteo en maquina,20,3,15
-3,C1,Leg press,80,4,20
-3,C1,Hack squat,40,4,15
-3,C1,Aducción,80,4,20
-3,C1,Leg extension,80,4,20
-4,C1,Jalón polea alta prono,33,4,15
-4,C1,Jalón polea alta supino,33,4,15
-4,C1,Remo sentado con polea,65,4,15
-4,C1,Curl biceps,10,4,10
-4,C1,Curl martillo,7,4,10
-5,C1,Abducción,80,4,20
-5,C1,Glúteo en maquina,40,3,15
-5,C1,Hip thrust,15,2,15
-5,C1,Hip thrust,20,2,15
-5,C1,Leg Curl,42.5,3,20
-5,C1,Peso muerto,22,3,15
-3,C2,Abducción,35,1,20
-3,C2,Abducción,40,2,20
-3,C2,Abducción,42.5,1,20
-3,C2,Glúteo en maquina,20,1,15
-3,C2,Glúteo en maquina,25,2,15
-3,C2,Hip thrust,5,1,15
-3,C2,Hip thrust,10,3,15
-3,C2,Leg Curl,15,3,15
-3,C2,Peso muerto,12,3,15
-6,C1,Leg extension,80,4,20
-6,C1,Leg press,80,4,20
-6,C1,Aducción,80,4,20
-7,C1,Press de pecho,40,4,20
-7,C1,Extensión de hombro,26,4,15
-7,C1,Extensión de tríceps en polea,27.5,4,15
-7,C1,Extensión lateral,7.5,3,15
-7,C1,Extensión frontal,4,1,15
-7,C1,Extensión frontal,7.5,2,15
-8,C1,Jalón polea alta prono,31.75,4,15
-8,C1,Jalón polea alta supino,31.75,4,15
-8,C1,Remo sentado con polea,65,4,15
-8,C1,Curl biceps,6,4,15
-8,C1,Curl martillo,6,4,15
-9,C1,Jalón polea alta prono,33,3,15
-9,C1,Jalón polea alta prono,40,1,15
-9,C1,Jalón polea alta supino,33,3,15
-9,C1,Jalón polea alta supino,40,1,15
-9,C1,Remo sentado con polea,65,4,15
-9,C1,Curl biceps,10,4,15
-9,C1,Curl martillo,7,4,15
-10,C1,Leg press,80,4,20
-10,C1,Hack squat,40,4,15
-10,C1,Aducción,79.37,4,20
-10,C1,Leg extension,36.28,4,20
-11,C1,Press de pecho,40,4,20
-11,C1,Extensión de hombro,25,4,15
-11,C1,Extensión de tríceps en polea,13.75,1,15
-11,C1,Extensión de tríceps en polea,16.25,3,15
-11,C1,Extensión lateral,6.25,3,15
-11,C1,Extensión frontal,6.25,1,15
-12,C1,Peso muerto,22,4,15
-12,C1,Leg Curl,47.62,4,20
-12,C1,Abducción,81.64,4,20
-12,C1,Glúteo en maquina,40,1,15
-12,C1,Glúteo en maquina,42.5,2,15
-13,C1,Jalón polea alta prono,28.5,4,15
-13,C1,Jalón polea alta supino,28.5,4,15
-13,C1,Remo sentado con polea,42.5,4,15
-13,C1,Curl biceps,10,3,10
-13,C1,Curl martillo,6,3,10
-14,C1,Leg press,50,4,20
-14,C1,Sentadilla,15,1,15
-14,C1,Sentadilla,20,1,15
-14,C1,Sentadilla,25,2,8
-14,C1,Aducción,105,4,20
-14,C1,Leg extension,105,4,20
-15,C1,Press de pecho,12,4,20
-15,C1,Extensión de hombro,15,4,15
-15,C1,Extensión de tríceps en polea,11.25,4,15
-15,C1,Extensión lateral,3.75,3,15
-15,C1,Extensión frontal,3.75,3,15
-16,C1,Peso muerto,22,4,15
-16,C1,Leg Curl,65,4,20
-16,C1,Hip thrust,20,4,15
-16,C1,Abducción,105,4,20
-16,C1,Glúteo en maquina,25,3,15
-17,C1,Abducción,175,1,20
-17,C1,Abducción,190,1,15
-17,C1,Abducción,205,1,12
-17,C1,Abducción,220,1,10
-17,C1,Hack squat,20,1,20
-17,C1,Hack squat,30,1,15
-17,C1,Hack squat,40,1,12
-17,C1,Hack squat,50,1,10
-17,C1,Leg press,70,1,20
-17,C1,Leg press,80,1,15
-17,C1,Leg press,90,1,12
-17,C1,Leg press,100,1,10
-17,C1,Leg extension,105,1,20
-17,C1,Leg extension,115,1,15
-17,C1,Leg extension,130,1,12
-17,C1,Leg extension,145,1,10
-18,C1,Remo sentado con polea,28.75,1,20
-18,C1,Remo sentado con polea,31.25,1,15
-18,C1,Remo sentado con polea,33.75,1,12
-18,C1,Remo sentado con polea,36.25,1,10
-18,C1,Jalón polea alta prono,33,4,15
-18,C1,Jalón polea alta supino,33,4,15
-18,C1,Curl biceps,10,3,20
-18,C1,Curl martillo,9,3,10
-19,C1,Peso muerto,22,4,15
-19,C1,Leg Curl,105,1,20
-19,C1,Leg Curl,115,1,15
-19,C1,Leg Curl,130,1,12
-19,C1,Leg Curl,145,1,10
-19,C1,Hip thrust,20,3,15
-19,C1,Abducción,175,1,20
-19,C1,Abducción,190,1,15
-19,C1,Abducción,205,1,12
-19,C1,Abducción,220,1,10
-19,C1,Glúteo en maquina,42.5,1,15
-19,C1,Glúteo en maquina,47.5,1,12
-19,C1,Glúteo en maquina,52.5,1,10
-20,C1,Press de pecho,19,1,20
-20,C1,Press de pecho,26,1,15
-20,C1,Press de pecho,33,1,12
-20,C1,Press de pecho,40,1,10
-20,C1,Extensión de hombro,25,1,20
-20,C1,Extensión de hombro,35,1,15
-20,C1,Extensión de hombro,45,1,12
-20,C1,Extensión de hombro,50,1,10
-20,C1,Extensión de tríceps en polea,11.25,4,15
-20,C1,Extensión lateral,3.75,3,15
-20,C1,Extensión frontal,3.75,3,15
+Dia,Id_Usuario,Ejercicio,Peso,Sets,Repeticiones,Unidad,Distancia,Tipo,Tiempo
+1,C1,Press de pecho,26,1,15,kg,,Gimnasio,
+1,C1,Press de pecho,33,2,15,kg,,Gimnasio,
+1,C1,Press de pecho,38,1,15,kg,,Gimnasio,
+1,C2,Press de pecho,5,1,15,kg,,Gimnasio,
+1,C2,Press de pecho,12,3,15,kg,,Gimnasio,
+1,C1,Extensión de hombro,15,3,15,kg,,Gimnasio,
+1,C2,Extensión de hombro,5,3,15,kg,,Gimnasio,
+1,C1,Extensión de tríceps en polea,13.75,1,15,kg,,Gimnasio,
+1,C1,Extensión de tríceps en polea,16.25,3,15,kg,,Gimnasio,
+1,C2,Extensión de tríceps en polea,6.25,4,15,kg,,Gimnasio,
+1,C1,Extensión lateral,6.25,3,10,kg,,Gimnasio,
+1,C2,Extensión lateral,1.25,3,10,kg,,Gimnasio,
+1,C1,Extensión frontal,3.75,3,10,kg,,Gimnasio,
+1,C2,Extensión frontal,1.25,3,10,kg,,Gimnasio,
+2,C1,Peso muerto,22,4,15,kg,,Gimnasio,
+2,C1,Leg Curl,47.5,4,20,kg,,Gimnasio,
+2,C1,Abducción,50,1,20,kg,,Gimnasio,
+2,C1,Abducción,60,1,20,kg,,Gimnasio,
+2,C1,Abducción,70,1,20,kg,,Gimnasio,
+2,C1,Abducción,80,1,20,kg,,Gimnasio,
+2,C1,Glúteo en maquina,30,1,15,kg,,Gimnasio,
+2,C1,Glúteo en maquina,32.5,1,15,kg,,Gimnasio,
+2,C1,Glúteo en maquina,35,1,15,kg,,Gimnasio,
+2,C2,Peso muerto,10,4,15,kg,,Gimnasio,
+2,C2,Leg Curl,17.5,1,20,kg,,Gimnasio,
+2,C2,Leg Curl,20,3,20,kg,,Gimnasio,
+2,C2,Abducción,27.5,1,15,kg,,Gimnasio,
+2,C2,Abducción,30,2,15,kg,,Gimnasio,
+2,C2,Abducción,35,1,15,kg,,Gimnasio,
+2,C2,Glúteo en maquina,20,3,15,kg,,Gimnasio,
+3,C1,Leg press,80,4,20,kg,,Gimnasio,
+3,C1,Hack squat,40,4,15,kg,,Gimnasio,
+3,C1,Aducción,80,4,20,kg,,Gimnasio,
+3,C1,Leg extension,80,4,20,kg,,Gimnasio,
+4,C1,Jalón polea alta prono,33,4,15,kg,,Gimnasio,
+4,C1,Jalón polea alta supino,33,4,15,kg,,Gimnasio,
+4,C1,Remo sentado con polea,65,4,15,kg,,Gimnasio,
+4,C1,Curl biceps,10,4,10,kg,,Gimnasio,
+4,C1,Curl martillo,7,4,10,kg,,Gimnasio,
+5,C1,Abducción,80,4,20,kg,,Gimnasio,
+5,C1,Glúteo en maquina,40,3,15,kg,,Gimnasio,
+5,C1,Hip thrust,15,2,15,kg,,Gimnasio,
+5,C1,Hip thrust,20,2,15,kg,,Gimnasio,
+5,C1,Leg Curl,42.5,3,20,kg,,Gimnasio,
+5,C1,Peso muerto,22,3,15,kg,,Gimnasio,
+3,C2,Abducción,35,1,20,kg,,Gimnasio,
+3,C2,Abducción,40,2,20,kg,,Gimnasio,
+3,C2,Abducción,42.5,1,20,kg,,Gimnasio,
+3,C2,Glúteo en maquina,20,1,15,kg,,Gimnasio,
+3,C2,Glúteo en maquina,25,2,15,kg,,Gimnasio,
+3,C2,Hip thrust,5,1,15,kg,,Gimnasio,
+3,C2,Hip thrust,10,3,15,kg,,Gimnasio,
+3,C2,Leg Curl,15,3,15,kg,,Gimnasio,
+3,C2,Peso muerto,12,3,15,kg,,Gimnasio,
+6,C1,Leg extension,80,4,20,kg,,Gimnasio,
+6,C1,Leg press,80,4,20,kg,,Gimnasio,
+6,C1,Aducción,80,4,20,kg,,Gimnasio,
+7,C1,Press de pecho,40,4,20,kg,,Gimnasio,
+7,C1,Extensión de hombro,26,4,15,kg,,Gimnasio,
+7,C1,Extensión de tríceps en polea,27.5,4,15,kg,,Gimnasio,
+7,C1,Extensión lateral,7.5,3,15,kg,,Gimnasio,
+7,C1,Extensión frontal,4,1,15,kg,,Gimnasio,
+7,C1,Extensión frontal,7.5,2,15,kg,,Gimnasio,
+8,C1,Jalón polea alta prono,31.75,4,15,kg,,Gimnasio,
+8,C1,Jalón polea alta supino,31.75,4,15,kg,,Gimnasio,
+8,C1,Remo sentado con polea,65,4,15,kg,,Gimnasio,
+8,C1,Curl biceps,6,4,15,kg,,Gimnasio,
+8,C1,Curl martillo,6,4,15,kg,,Gimnasio,
+9,C1,Jalón polea alta prono,33,3,15,kg,,Gimnasio,
+9,C1,Jalón polea alta prono,40,1,15,kg,,Gimnasio,
+9,C1,Jalón polea alta supino,33,3,15,kg,,Gimnasio,
+9,C1,Jalón polea alta supino,40,1,15,kg,,Gimnasio,
+9,C1,Remo sentado con polea,65,4,15,kg,,Gimnasio,
+9,C1,Curl biceps,10,4,15,kg,,Gimnasio,
+9,C1,Curl martillo,7,4,15,kg,,Gimnasio,
+10,C1,Leg press,80,4,20,kg,,Gimnasio,
+10,C1,Hack squat,40,4,15,kg,,Gimnasio,
+10,C1,Aducción,79.37,4,20,kg,,Gimnasio,
+10,C1,Leg extension,36.28,4,20,kg,,Gimnasio,
+11,C1,Press de pecho,40,4,20,kg,,Gimnasio,
+11,C1,Extensión de hombro,25,4,15,kg,,Gimnasio,
+11,C1,Extensión de tríceps en polea,13.75,1,15,kg,,Gimnasio,
+11,C1,Extensión de tríceps en polea,16.25,3,15,kg,,Gimnasio,
+11,C1,Extensión lateral,6.25,3,15,kg,,Gimnasio,
+11,C1,Extensión frontal,6.25,1,15,kg,,Gimnasio,
+12,C1,Peso muerto,22,4,15,kg,,Gimnasio,
+12,C1,Leg Curl,47.62,4,20,kg,,Gimnasio,
+12,C1,Abducción,81.64,4,20,kg,,Gimnasio,
+12,C1,Glúteo en maquina,40,1,15,kg,,Gimnasio,
+12,C1,Glúteo en maquina,42.5,2,15,kg,,Gimnasio,
+13,C1,Jalón polea alta prono,28.5,4,15,kg,,Gimnasio,
+13,C1,Jalón polea alta supino,28.5,4,15,kg,,Gimnasio,
+13,C1,Remo sentado con polea,42.5,4,15,kg,,Gimnasio,
+13,C1,Curl biceps,10,3,10,kg,,Gimnasio,
+13,C1,Curl martillo,6,3,10,kg,,Gimnasio,
+14,C1,Leg press,50,4,20,kg,,Gimnasio,
+14,C1,Sentadilla,15,1,15,kg,,Gimnasio,
+14,C1,Sentadilla,20,1,15,kg,,Gimnasio,
+14,C1,Sentadilla,25,2,8,kg,,Gimnasio,
+14,C1,Aducción,105,4,20,kg,,Gimnasio,
+14,C1,Leg extension,105,4,20,kg,,Gimnasio,
+15,C1,Press de pecho,12,4,20,kg,,Gimnasio,
+15,C1,Extensión de hombro,15,4,15,kg,,Gimnasio,
+15,C1,Extensión de tríceps en polea,11.25,4,15,kg,,Gimnasio,
+15,C1,Extensión lateral,3.75,3,15,kg,,Gimnasio,
+15,C1,Extensión frontal,3.75,3,15,kg,,Gimnasio,
+16,C1,Peso muerto,22,4,15,kg,,Gimnasio,
+16,C1,Leg Curl,65,4,20,kg,,Gimnasio,
+16,C1,Hip thrust,20,4,15,kg,,Gimnasio,
+16,C1,Abducción,105,4,20,kg,,Gimnasio,
+16,C1,Glúteo en maquina,25,3,15,kg,,Gimnasio,
+17,C1,Abducción,175,1,20,kg,,Gimnasio,
+17,C1,Abducción,190,1,15,kg,,Gimnasio,
+17,C1,Abducción,205,1,12,kg,,Gimnasio,
+17,C1,Abducción,220,1,10,kg,,Gimnasio,
+17,C1,Hack squat,20,1,20,kg,,Gimnasio,
+17,C1,Hack squat,30,1,15,kg,,Gimnasio,
+17,C1,Hack squat,40,1,12,kg,,Gimnasio,
+17,C1,Hack squat,50,1,10,kg,,Gimnasio,
+17,C1,Leg press,70,1,20,kg,,Gimnasio,
+17,C1,Leg press,80,1,15,kg,,Gimnasio,
+17,C1,Leg press,90,1,12,kg,,Gimnasio,
+17,C1,Leg press,100,1,10,kg,,Gimnasio,
+17,C1,Leg extension,105,1,20,kg,,Gimnasio,
+17,C1,Leg extension,115,1,15,kg,,Gimnasio,
+17,C1,Leg extension,130,1,12,kg,,Gimnasio,
+17,C1,Leg extension,145,1,10,kg,,Gimnasio,
+18,C1,Remo sentado con polea,28.75,1,20,kg,,Gimnasio,
+18,C1,Remo sentado con polea,31.25,1,15,kg,,Gimnasio,
+18,C1,Remo sentado con polea,33.75,1,12,kg,,Gimnasio,
+18,C1,Remo sentado con polea,36.25,1,10,kg,,Gimnasio,
+18,C1,Jalón polea alta prono,33,4,15,kg,,Gimnasio,
+18,C1,Jalón polea alta supino,33,4,15,kg,,Gimnasio,
+18,C1,Curl biceps,10,3,20,kg,,Gimnasio,
+18,C1,Curl martillo,9,3,10,kg,,Gimnasio,
+19,C1,Peso muerto,22,4,15,kg,,Gimnasio,
+19,C1,Leg Curl,105,1,20,kg,,Gimnasio,
+19,C1,Leg Curl,115,1,15,kg,,Gimnasio,
+19,C1,Leg Curl,130,1,12,kg,,Gimnasio,
+19,C1,Leg Curl,145,1,10,kg,,Gimnasio,
+19,C1,Hip thrust,20,3,15,kg,,Gimnasio,
+19,C1,Abducción,175,1,20,kg,,Gimnasio,
+19,C1,Abducción,190,1,15,kg,,Gimnasio,
+19,C1,Abducción,205,1,12,kg,,Gimnasio,
+19,C1,Abducción,220,1,10,kg,,Gimnasio,
+19,C1,Glúteo en maquina,42.5,1,15,kg,,Gimnasio,
+19,C1,Glúteo en maquina,47.5,1,12,kg,,Gimnasio,
+19,C1,Glúteo en maquina,52.5,1,10,kg,,Gimnasio,
+20,C1,Press de pecho,19,1,20,kg,,Gimnasio,
+20,C1,Press de pecho,26,1,15,kg,,Gimnasio,
+20,C1,Press de pecho,33,1,12,kg,,Gimnasio,
+20,C1,Press de pecho,40,1,10,kg,,Gimnasio,
+20,C1,Extensión de hombro,25,1,20,kg,,Gimnasio,
+20,C1,Extensión de hombro,35,1,15,kg,,Gimnasio,
+20,C1,Extensión de hombro,45,1,12,kg,,Gimnasio,
+20,C1,Extensión de hombro,50,1,10,kg,,Gimnasio,
+20,C1,Extensión de tríceps en polea,11.25,4,15,kg,,Gimnasio,
+20,C1,Extensión lateral,3.75,3,15,kg,,Gimnasio,
+20,C1,Extensión frontal,3.75,3,15,kg,,Gimnasio,

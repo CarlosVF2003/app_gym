@@ -1,10 +1,12 @@
-Grupo_Muscular,Ejercicio
-Pectorales hombros y triceps,Press de pecho
-Pectorales hombros y triceps,Extensión de hombro
-Pectorales hombros y triceps,Extensión de tríceps en polea
-Pectorales hombros y triceps,Extensión lateral
-Pectorales hombros y triceps,Extensión frontal
-Gluteos y femorales,Peso muerto
-Gluteos y femorales,Leg Curl
-Gluteos y femorales,Abducción
-Gluteos y femorales,Glúteo en maquina
+Grupo_Muscular,Ejercicio,Tipo
+Pectorales hombros y triceps,Press de pecho,Gimnasio
+Pectorales hombros y triceps,Extensión de hombro,Gimnasio
+Pectorales hombros y triceps,Extensión de tríceps en polea,Gimnasio
+Pectorales hombros y triceps,Extensión lateral,Gimnasio
+Pectorales hombros y triceps,Extensión frontal,Gimnasio
+Gluteos y femorales,Peso muerto,Gimnasio
+Gluteos y femorales,Leg Curl,Gimnasio
+Gluteos y femorales,Abducción,Gimnasio
+Gluteos y femorales,Glúteo en maquina,Gimnasio
+Cardio,Correr,Carrera
+Cardio,Trote,Carrera

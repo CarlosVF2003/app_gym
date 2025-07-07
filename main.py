@@ -8,14 +8,22 @@ CATALOGO_CSV = 'data/Grupo_muscular.csv'
 
 
 def load_dfs():
+    cols = ['Dia', 'Id_Usuario', 'Ejercicio', 'Peso', 'Sets',
+            'Repeticiones', 'Unidad', 'Distancia', 'Tipo', 'Tiempo']
     try:
         progreso = pd.read_csv(PROGRESO_CSV)
+        for c in cols:
+            if c not in progreso.columns:
+                progreso[c] = None
+        progreso = progreso[cols]
     except FileNotFoundError:
-        progreso = pd.DataFrame(columns=['Dia', 'Id_Usuario', 'Ejercicio', 'Peso', 'Sets', 'Repeticiones'])
+        progreso = pd.DataFrame(columns=cols)
     try:
         catalogo = pd.read_csv(CATALOGO_CSV)
+        if 'Tipo' not in catalogo.columns:
+            catalogo['Tipo'] = 'Gimnasio'
     except FileNotFoundError:
-        catalogo = pd.DataFrame(columns=['Grupo_Muscular', 'Ejercicio'])
+        catalogo = pd.DataFrame(columns=['Grupo_Muscular', 'Ejercicio', 'Tipo'])
     try:
         usuarios = pd.read_csv(USUARIOS_CSV)
     except FileNotFoundError:
@@ -91,9 +99,10 @@ with st.expander('📚 Catálogo de Ejercicios'):
     with st.form('add_exercise'):
         grupo = st.text_input('Grupo Muscular')
         ejercicio = st.text_input('Ejercicio')
+        tipo_ej = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
         submitted = st.form_submit_button('Agregar')
         if submitted and grupo and ejercicio:
-            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio]
+            grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
             save_df(grupo_muscular_df, CATALOGO_CSV)
             st.experimental_rerun()
     if not grupo_muscular_df.empty:
@@ -105,18 +114,53 @@ with st.expander('📚 Catálogo de Ejercicios'):
 
 # ------ Registro de entrenamiento ------
 with st.expander('📝 Registrar Entrenamiento'):
+    tipo = st.selectbox('Tipo', ['Gimnasio', 'Carrera'])
     dia = st.text_input('Día')
-    ejercicio = st.selectbox('Ejercicio', grupo_muscular_df['Ejercicio'].unique())
-    sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
-    peso = st.number_input('Peso', min_value=0.0, step=0.1)
-    reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
-    if st.button('Guardar') and dia:
-        nuevo = pd.DataFrame({'Dia': [dia], 'Id_Usuario': [st.session_state['user_id']],
-                             'Ejercicio': [ejercicio], 'Peso': [peso], 'Sets': [sets],
-                             'Repeticiones': [reps]})
-        progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
-        save_df(progreso_df, PROGRESO_CSV)
-        st.success('Entrenamiento guardado')
+    if tipo == 'Gimnasio':
+        ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Gimnasio']['Ejercicio']
+        ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
+        sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
+        unidad = st.selectbox('Unidad', ['kg', 'lb'])
+        peso = st.number_input('Peso', min_value=0.0, step=0.1)
+        reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
+        if st.button('Guardar') and dia:
+            peso_kg = peso * 0.453592 if unidad == 'lb' else peso
+            nuevo = pd.DataFrame({
+                'Dia': [dia],
+                'Id_Usuario': [st.session_state['user_id']],
+                'Ejercicio': [ejercicio],
+                'Peso': [peso_kg],
+                'Sets': [sets],
+                'Repeticiones': [reps],
+                'Unidad': [unidad],
+                'Distancia': [None],
+                'Tipo': ['Gimnasio'],
+                'Tiempo': [None]
+            })
+            progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
+            save_df(progreso_df, PROGRESO_CSV)
+            st.success('Entrenamiento guardado')
+    else:
+        ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Carrera']['Ejercicio']
+        ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
+        distancia = st.number_input('Distancia (km)', min_value=0.0, step=0.1)
+        tiempo = st.number_input('Tiempo (min)', min_value=0.0, step=1.0)
+        if st.button('Guardar') and dia:
+            nuevo = pd.DataFrame({
+                'Dia': [dia],
+                'Id_Usuario': [st.session_state['user_id']],
+                'Ejercicio': [ejercicio],
+                'Peso': [0],
+                'Sets': [1],
+                'Repeticiones': [1],
+                'Unidad': ['km'],
+                'Distancia': [distancia],
+                'Tipo': ['Carrera'],
+                'Tiempo': [tiempo]
+            })
+            progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
+            save_df(progreso_df, PROGRESO_CSV)
+            st.success('Entrenamiento guardado')
 
 # ------ Panel de progreso ------
 with st.expander('📊 Progreso'):
@@ -124,16 +168,43 @@ with st.expander('📊 Progreso'):
     if usuario_datos.empty:
         st.info('Aún no hay datos registrados')
     else:
-        usuario_datos['Volumen'] = usuario_datos['Peso'] * usuario_datos['Repeticiones'] * usuario_datos['Sets']
-        total_volumen = usuario_datos['Volumen'].sum()
+        gimnasio = usuario_datos[usuario_datos['Tipo'] == 'Gimnasio'].copy()
+        gimnasio['Peso_kg'] = gimnasio.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
+        total_volumen = gimnasio['Volumen'].sum()
         dias = usuario_datos['Dia'].nunique()
-        st.metric('Volumen total', f"{total_volumen:.2f}")
+        st.metric('Volumen total', f"{total_volumen:.2f} kg")
         st.metric('Días registrados', dias)
-        pr = usuario_datos.groupby('Ejercicio')['Peso'].max().reset_index(name='PR')
+
+        pr = gimnasio.groupby('Ejercicio')['Peso_kg'].max().reset_index(name='PR (kg)')
         st.subheader('Récords personales')
         st.dataframe(pr)
-        grafica = alt.Chart(usuario_datos).mark_line().encode(
-            x='Dia:T', y='Peso', color='Ejercicio'
+
+        st.subheader('Peso promedio por ejercicio')
+        promedio = gimnasio.groupby('Ejercicio')['Peso_kg'].mean().reset_index(name='Promedio (kg)')
+        st.dataframe(promedio)
+
+        grafica = alt.Chart(gimnasio).mark_line().encode(
+            x='Dia:T', y='Peso_kg', color='Ejercicio'
         )
         st.altair_chart(grafica, use_container_width=True)
+
+        carreras = usuario_datos[usuario_datos['Tipo'] == 'Carrera']
+        if not carreras.empty:
+            total_km = carreras['Distancia'].sum()
+            st.metric('Kilómetros acumulados', f"{total_km:.2f} km")
+            graf_km = alt.Chart(carreras).mark_line().encode(
+                x='Dia:T', y='Distancia', color='Ejercicio'
+            )
+            st.altair_chart(graf_km, use_container_width=True)
+
+        st.subheader('Comparativa con otros usuarios')
+        ejercicio_comp = st.selectbox('Ejercicio', progreso_df['Ejercicio'].unique())
+        pr_usuarios = progreso_df[progreso_df['Tipo'] == 'Gimnasio']
+        pr_usuarios['Peso_kg'] = pr_usuarios.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        comp = pr_usuarios[pr_usuarios['Ejercicio'] == ejercicio_comp]
+        comp = comp.groupby('Id_Usuario')['Peso_kg'].max().reset_index()
+        comp = comp.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
+        graf_comp = alt.Chart(comp).mark_bar().encode(x='Nombre', y='Peso_kg')
+        st.altair_chart(graf_comp, use_container_width=True)
 
