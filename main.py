@@ -214,8 +214,16 @@ with tabs[1]:
         elif rango_opt == '30 días':
             inicio, fin = hoy - pd.Timedelta(days=29), hoy
         else:
-            r = st.date_input('Selecciona rango', [data_user['Fecha'].min(), data_user['Fecha'].max()])
-            inicio, fin = pd.to_datetime(r[0]), pd.to_datetime(r[1]) if len(r) == 2 else (data_user['Fecha'].min(), data_user['Fecha'].max())
+            r = st.date_input(
+                'Selecciona rango',
+                value=[data_user['Fecha'].min(), data_user['Fecha'].max()],
+            )
+            if len(r) == 2:
+                inicio = pd.to_datetime(r[0])
+                fin = pd.to_datetime(r[1])
+            else:
+                inicio = data_user['Fecha'].min()
+                fin = data_user['Fecha'].max()
         periodo = (fin - inicio).days + 1
         datos_periodo = data_user[(data_user['Fecha'] >= inicio) & (data_user['Fecha'] <= fin)]
         prev = data_user[(data_user['Fecha'] >= inicio - pd.Timedelta(days=periodo)) & (data_user['Fecha'] < inicio)]
