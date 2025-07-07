@@ -27,7 +27,7 @@ CATALOGO_CSV = 'data/Grupo_muscular.csv'
 
 def load_dfs():
     cols = ['Dia', 'Id_Usuario', 'Ejercicio', 'Peso', 'Sets',
-            'Repeticiones', 'Unidad', 'Distancia', 'Tipo', 'Tiempo']
+            'Repeticiones', 'Unidad', 'Distancia', 'Tipo', 'Tiempo', 'Notas']
     try:
         progreso = pd.read_csv(PROGRESO_CSV)
         for c in cols:
@@ -144,18 +144,18 @@ with tabs[0]:
             reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
         if st.button('Guardar') and dia:
             dia_str = dia.strftime('%Y-%m-%d') if isinstance(dia, date) else str(dia)
-            peso_kg = peso * 0.453592 if unidad == 'lb' else peso
             nuevo = pd.DataFrame({
                 'Dia': [dia_str],
                 'Id_Usuario': [st.session_state['user_id']],
                 'Ejercicio': [ejercicio],
-                'Peso': [peso_kg],
+                'Peso': [peso],
                 'Sets': [sets],
                 'Repeticiones': [reps],
                 'Unidad': [unidad],
                 'Distancia': [None],
                 'Tipo': ['Gimnasio'],
-                'Tiempo': [None]
+                'Tiempo': [None],
+                'Notas': [nota]
             })
             progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
             save_df(progreso_df, PROGRESO_CSV)
@@ -181,7 +181,8 @@ with tabs[0]:
                 'Unidad': ['km'],
                 'Distancia': [distancia],
                 'Tipo': ['Carrera'],
-                'Tiempo': [tiempo]
+                'Tiempo': [tiempo],
+                'Notas': [nota]
             })
             progreso_df = pd.concat([progreso_df, nuevo], ignore_index=True)
             save_df(progreso_df, PROGRESO_CSV)
@@ -224,10 +225,24 @@ with tabs[1]:
         pr = gimnasio.groupby('Ejercicio')['Peso_kg'].max().reset_index(name='PR (kg)')
         st.subheader('Récords personales')
         st.dataframe(pr)
+        pr_chart = (
+            alt.Chart(pr)
+            .mark_bar()
+            .encode(x='Ejercicio', y='PR (kg)', tooltip=['PR (kg)'])
+            .interactive()
+        )
+        st.altair_chart(pr_chart, use_container_width=True)
 
         st.subheader('Peso promedio por ejercicio')
         promedio = gimnasio.groupby('Ejercicio')['Peso_kg'].mean().reset_index(name='Promedio (kg)')
         st.dataframe(promedio)
+        prom_chart = (
+            alt.Chart(promedio)
+            .mark_bar()
+            .encode(x='Ejercicio', y='Promedio (kg)', tooltip=['Promedio (kg)'])
+            .interactive()
+        )
+        st.altair_chart(prom_chart, use_container_width=True)
 
         grafica = (
             alt.Chart(datos)

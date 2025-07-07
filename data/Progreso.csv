@@ -1,4 +1,4 @@
-Dia,Id_Usuario,Ejercicio,Peso,Sets,Repeticiones,Unidad,Distancia,Tipo,Tiempo
+Dia,Id_Usuario,Ejercicio,Peso,Sets,Repeticiones,Unidad,Distancia,Tipo,Tiempo,Notas
 1,C1,Press de pecho,26,1,15,kg,,Gimnasio,
 1,C1,Press de pecho,33,2,15,kg,,Gimnasio,
 1,C1,Press de pecho,38,1,15,kg,,Gimnasio,
