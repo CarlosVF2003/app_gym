@@ -9,6 +9,17 @@ st.set_page_config(
     layout="centered",
 )
 
+# Simple styling for better UX
+st.markdown(
+    """
+    <style>
+        body {font-family: 'Segoe UI', sans-serif;}
+        .block-container {padding-top: 2rem;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 USUARIOS_CSV = 'data/Usuarios.csv'
 PROGRESO_CSV = 'data/Progreso.csv'
 CATALOGO_CSV = 'data/Grupo_muscular.csv'
@@ -51,37 +62,37 @@ if 'authenticated' not in st.session_state:
     st.session_state['user_id'] = None
 
 
-def login_form():
-    st.header('Iniciar sesión')
-    user = st.text_input('Usuario')
-    pwd = st.text_input('Contraseña', type='password')
-    if st.button('Ingresar'):
-        row = usuario_df[(usuario_df['Username'] == user) & (usuario_df['Password'] == pwd)]
-        if not row.empty:
-            st.session_state['authenticated'] = True
-            st.session_state['user_id'] = row.iloc[0]['Id_Usuario']
-            try:
-                st.experimental_rerun()
-            except Exception:
-                pass
-        else:
-            st.error('Credenciales inválidas')
+def auth_tabs():
+    tabs = st.tabs(['Iniciar sesión', 'Registro'])
 
+    with tabs[0]:
+        user = st.text_input('Usuario')
+        pwd = st.text_input('Contraseña', type='password')
+        if st.button('Ingresar'):
+            row = usuario_df[(usuario_df['Username'] == user) & (usuario_df['Password'] == pwd)]
+            if not row.empty:
+                st.session_state['authenticated'] = True
+                st.session_state['user_id'] = row.iloc[0]['Id_Usuario']
+                try:
+                    st.experimental_rerun()
+                except Exception:
+                    pass
+            else:
+                st.error('Credenciales inválidas')
 
-def register_form():
-    st.header('Registro')
-    name = st.text_input('Nombre para mostrar')
-    user = st.text_input('Usuario', key='reg_user')
-    pwd = st.text_input('Contraseña', type='password', key='reg_pwd')
-    if st.button('Registrar'):
-        if user in usuario_df['Username'].values:
-            st.error('El usuario ya existe')
-        else:
-            new_id = f'U{len(usuario_df) + 1}'
-            new_row = {'Id_Usuario': new_id, 'Nombre': name, 'Color': 'gray', 'Username': user, 'Password': pwd}
-            usuario_df.loc[len(usuario_df)] = new_row
-            save_df(usuario_df, USUARIOS_CSV)
-            st.success('Usuario registrado, ahora puede iniciar sesión')
+    with tabs[1]:
+        name = st.text_input('Nombre para mostrar')
+        user = st.text_input('Usuario', key='reg_user')
+        pwd = st.text_input('Contraseña', type='password', key='reg_pwd')
+        if st.button('Registrar'):
+            if user in usuario_df['Username'].values:
+                st.error('El usuario ya existe')
+            else:
+                new_id = f'U{len(usuario_df) + 1}'
+                new_row = {'Id_Usuario': new_id, 'Nombre': name, 'Color': 'gray', 'Username': user, 'Password': pwd}
+                usuario_df.loc[len(usuario_df)] = new_row
+                save_df(usuario_df, USUARIOS_CSV)
+                st.success('Usuario registrado')
 
 
 def logout():
@@ -94,9 +105,7 @@ def logout():
 
 
 if not st.session_state['authenticated']:
-    login_form()
-    st.divider()
-    register_form()
+    auth_tabs()
     st.stop()
 
 usuario_actual = usuario_df[usuario_df['Id_Usuario'] == st.session_state['user_id']].iloc[0]
@@ -125,10 +134,14 @@ with tabs[0]:
     if tipo == 'Gimnasio':
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Gimnasio']['Ejercicio']
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
-        sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
-        unidad = st.selectbox('Unidad', ['kg', 'lb'])
-        peso = st.number_input('Peso', min_value=0.0, step=0.1)
-        reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            sets = st.number_input('Sets', min_value=1, max_value=10, step=1, value=4)
+        with c2:
+            unidad = st.selectbox('Unidad', ['kg', 'lb'])
+            peso = st.number_input('Peso', min_value=0.0, step=0.1)
+        with c3:
+            reps = st.number_input('Repeticiones', min_value=1, step=1, value=10)
         if st.button('Guardar') and dia:
             peso_kg = peso * 0.453592 if unidad == 'lb' else peso
             nuevo = pd.DataFrame({
@@ -149,8 +162,11 @@ with tabs[0]:
     else:
         ejercicios = grupo_muscular_df[grupo_muscular_df['Tipo'] == 'Carrera']['Ejercicio']
         ejercicio = st.selectbox('Ejercicio', ejercicios.unique())
-        distancia = st.number_input('Distancia (km)', min_value=0.0, step=0.1)
-        tiempo = st.number_input('Tiempo (min)', min_value=0.0, step=1.0)
+        col1, col2 = st.columns(2)
+        with col1:
+            distancia = st.number_input('Distancia (km)', min_value=0.0, step=0.1)
+        with col2:
+            tiempo = st.number_input('Tiempo (min)', min_value=0.0, step=1.0)
         ruta = st.file_uploader('Ruta GPX/CSV (opcional)', type=['gpx', 'csv'])
         if st.button('Guardar') and dia:
             nuevo = pd.DataFrame({
@@ -190,8 +206,9 @@ with tabs[1]:
         gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
         total_volumen = gimnasio['Volumen'].sum()
         dias = usuario_datos['Dia'].nunique()
-        st.metric('Volumen total', f"{total_volumen:.2f} kg")
-        st.metric('Días registrados', dias)
+        colm1, colm2 = st.columns(2)
+        colm1.metric('Volumen total', f"{total_volumen:.2f} kg")
+        colm2.metric('Días registrados', dias)
 
         gimnasio['1RM'] = gimnasio['Peso_kg'] * (1 + gimnasio['Repeticiones'] / 30)
         max_1rm = gimnasio.groupby('Ejercicio')['1RM'].max().reset_index(name='Proyección 1RM')
@@ -206,15 +223,26 @@ with tabs[1]:
         promedio = gimnasio.groupby('Ejercicio')['Peso_kg'].mean().reset_index(name='Promedio (kg)')
         st.dataframe(promedio)
 
-        grafica = alt.Chart(datos).mark_line().encode(
-            x='Dia:T', y='Peso_kg', color='Ejercicio'
+        grafica = (
+            alt.Chart(datos)
+            .mark_line(point=True)
+            .encode(
+                x='Dia:T',
+                y='Peso_kg',
+                color='Ejercicio',
+                tooltip=['Dia', 'Ejercicio', 'Peso_kg']
+            )
+            .interactive()
         )
         st.altair_chart(grafica, use_container_width=True)
 
         volumen_ej = gimnasio.groupby('Ejercicio')['Volumen'].sum().reset_index()
         st.subheader('Volumen total por ejercicio')
-        graf_vol = alt.Chart(volumen_ej).mark_bar().encode(
-            x='Ejercicio', y='Volumen'
+        graf_vol = (
+            alt.Chart(volumen_ej)
+            .mark_bar()
+            .encode(x='Ejercicio', y='Volumen', tooltip=['Volumen'])
+            .interactive()
         )
         st.altair_chart(graf_vol, use_container_width=True)
 
@@ -222,16 +250,22 @@ with tabs[1]:
         gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
         semanal = gimnasio.groupby('Semana')['Volumen'].sum().reset_index()
         st.subheader('Volumen semanal')
-        graf_sem = alt.Chart(semanal).mark_line(point=True).encode(
-            x='Semana', y='Volumen'
+        graf_sem = (
+            alt.Chart(semanal)
+            .mark_line(point=True)
+            .encode(x='Semana', y='Volumen', tooltip=['Semana', 'Volumen'])
+            .interactive()
         )
         st.altair_chart(graf_sem, use_container_width=True)
 
         gimnasio['Mes'] = gimnasio['Fecha'].dt.to_period('M').astype(str)
         mensual = gimnasio.groupby('Mes')['Volumen'].sum().reset_index()
         st.subheader('Volumen mensual')
-        graf_mens = alt.Chart(mensual).mark_bar().encode(
-            x='Mes', y='Volumen'
+        graf_mens = (
+            alt.Chart(mensual)
+            .mark_bar()
+            .encode(x='Mes', y='Volumen', tooltip=['Volumen'])
+            .interactive()
         )
         st.altair_chart(graf_mens, use_container_width=True)
 
@@ -239,8 +273,16 @@ with tabs[1]:
         if not carreras.empty:
             total_km = carreras['Distancia'].sum()
             st.metric('Kilómetros acumulados', f"{total_km:.2f} km")
-            graf_km = alt.Chart(carreras).mark_line().encode(
-                x='Dia:T', y='Distancia', color='Ejercicio'
+            graf_km = (
+                alt.Chart(carreras)
+                .mark_line(point=True)
+                .encode(
+                    x='Dia:T',
+                    y='Distancia',
+                    color='Ejercicio',
+                    tooltip=['Dia', 'Distancia', 'Ejercicio']
+                )
+                .interactive()
             )
             st.altair_chart(graf_km, use_container_width=True)
 
@@ -248,8 +290,11 @@ with tabs[1]:
             carreras['Semana'] = carreras['Fecha'].dt.to_period('W').astype(str)
             run_sem = carreras.groupby('Semana')['Distancia'].sum().reset_index()
             st.subheader('Distancia semanal')
-            graf_run_sem = alt.Chart(run_sem).mark_line(point=True).encode(
-                x='Semana', y='Distancia'
+            graf_run_sem = (
+                alt.Chart(run_sem)
+                .mark_line(point=True)
+                .encode(x='Semana', y='Distancia', tooltip=['Semana', 'Distancia'])
+                .interactive()
             )
             st.altair_chart(graf_run_sem, use_container_width=True)
 
@@ -260,7 +305,12 @@ with tabs[1]:
         comp = pr_usuarios[pr_usuarios['Ejercicio'] == ejercicio_comp]
         comp = comp.groupby('Id_Usuario')['Peso_kg'].max().reset_index()
         comp = comp.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
-        graf_comp = alt.Chart(comp).mark_bar().encode(x='Nombre', y='Peso_kg')
+        graf_comp = (
+            alt.Chart(comp)
+            .mark_bar()
+            .encode(x='Nombre', y='Peso_kg', tooltip=['Nombre', 'Peso_kg'])
+            .interactive()
+        )
         st.altair_chart(graf_comp, use_container_width=True)
 
         with st.expander('🚧 En progreso'):
