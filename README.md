@@ -19,6 +19,7 @@ Aplicación sencilla en Streamlit para registrar entrenamientos de gimnasio y ca
 - Catálogo editable de ejercicios de gimnasio y running.
 - Registro diario con peso (kg/lb), repeticiones, series y distancia.
 - Paneles de progreso interactivos con métricas ejecutivas (volumen, distancia y sesiones) y comparativas entre usuarios.
+- Indicador de consistencia con promedio de días entrenados por semana.
 - Filtros rápidos Hoy/7 días/30 días o personalizado para cambiar todas las gráficas.
 - Gráficos de peso promedio, volumen por grupo muscular y distancia semanal.
 - Barras de volumen por ejercicio y por grupo muscular.

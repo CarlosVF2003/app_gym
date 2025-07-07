@@ -269,11 +269,14 @@ with tabs[1]:
         else:
             ultimo_pr = '-'
 
-        m1, m2, m3, m4 = st.columns(4)
+        promedio_semana = sesiones / periodo * 7 if periodo else 0
+
+        m1, m2, m3, m4, m5 = st.columns(5)
         m1.metric('Carga total', f"{total_vol:.1f} kg", f"{delta_vol:+.1f}")
         m2.metric('Distancia', f"{total_km:.1f} km", f"{delta_km:+.1f}")
         m3.metric('Sesiones', sesiones)
         m4.metric('Último PR', ultimo_pr)
+        m5.metric('Consistencia', f"{promedio_semana:.1f}/sem")
 
         # --- Gráficas Gimnasio ---
         if show_gym and not gym.empty:
