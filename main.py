@@ -184,6 +184,9 @@ with tabs[1]:
     else:
         gimnasio = usuario_datos[usuario_datos['Tipo'] == 'Gimnasio'].copy()
         gimnasio['Peso_kg'] = gimnasio.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        ejercicios_disp = ['Todos'] + sorted(gimnasio['Ejercicio'].unique())
+        ejercicio_sel = st.selectbox('Filtrar por ejercicio', ejercicios_disp)
+        datos = gimnasio if ejercicio_sel == 'Todos' else gimnasio[gimnasio['Ejercicio'] == ejercicio_sel]
         gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
         total_volumen = gimnasio['Volumen'].sum()
         dias = usuario_datos['Dia'].nunique()
@@ -203,10 +206,17 @@ with tabs[1]:
         promedio = gimnasio.groupby('Ejercicio')['Peso_kg'].mean().reset_index(name='Promedio (kg)')
         st.dataframe(promedio)
 
-        grafica = alt.Chart(gimnasio).mark_line().encode(
+        grafica = alt.Chart(datos).mark_line().encode(
             x='Dia:T', y='Peso_kg', color='Ejercicio'
         )
         st.altair_chart(grafica, use_container_width=True)
+
+        volumen_ej = gimnasio.groupby('Ejercicio')['Volumen'].sum().reset_index()
+        st.subheader('Volumen total por ejercicio')
+        graf_vol = alt.Chart(volumen_ej).mark_bar().encode(
+            x='Ejercicio', y='Volumen'
+        )
+        st.altair_chart(graf_vol, use_container_width=True)
 
         gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
         gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
