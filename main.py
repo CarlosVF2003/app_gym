@@ -53,7 +53,10 @@ def login_form():
         if not row.empty:
             st.session_state['authenticated'] = True
             st.session_state['user_id'] = row.iloc[0]['Id_Usuario']
-            st.experimental_rerun()
+            try:
+                st.experimental_rerun()
+            except Exception:
+                pass
         else:
             st.error('Credenciales inválidas')
 
@@ -77,7 +80,10 @@ def register_form():
 def logout():
     st.session_state['authenticated'] = False
     st.session_state['user_id'] = None
-    st.experimental_rerun()
+    try:
+        st.experimental_rerun()
+    except Exception:
+        pass
 
 
 if not st.session_state['authenticated']:
@@ -104,13 +110,19 @@ with st.expander('📚 Catálogo de Ejercicios'):
         if submitted and grupo and ejercicio:
             grupo_muscular_df.loc[len(grupo_muscular_df)] = [grupo, ejercicio, tipo_ej]
             save_df(grupo_muscular_df, CATALOGO_CSV)
-            st.experimental_rerun()
+            try:
+                st.experimental_rerun()
+            except Exception:
+                pass
     if not grupo_muscular_df.empty:
         borrar = st.selectbox('Eliminar ejercicio', grupo_muscular_df['Ejercicio'].unique())
         if st.button('Eliminar'):
             grupo_muscular_df = grupo_muscular_df[grupo_muscular_df['Ejercicio'] != borrar]
             save_df(grupo_muscular_df, CATALOGO_CSV)
-            st.experimental_rerun()
+            try:
+                st.experimental_rerun()
+            except Exception:
+                pass
 
 # ------ Registro de entrenamiento ------
 with st.expander('📝 Registrar Entrenamiento'):
@@ -176,6 +188,11 @@ with st.expander('📊 Progreso'):
         st.metric('Volumen total', f"{total_volumen:.2f} kg")
         st.metric('Días registrados', dias)
 
+        gimnasio['1RM'] = gimnasio['Peso_kg'] * (1 + gimnasio['Repeticiones'] / 30)
+        max_1rm = gimnasio.groupby('Ejercicio')['1RM'].max().reset_index(name='Proyección 1RM')
+        st.subheader('Proyección de 1RM por ejercicio')
+        st.dataframe(max_1rm)
+
         pr = gimnasio.groupby('Ejercicio')['Peso_kg'].max().reset_index(name='PR (kg)')
         st.subheader('Récords personales')
         st.dataframe(pr)
@@ -189,6 +206,23 @@ with st.expander('📊 Progreso'):
         )
         st.altair_chart(grafica, use_container_width=True)
 
+        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
+        gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
+        semanal = gimnasio.groupby('Semana')['Volumen'].sum().reset_index()
+        st.subheader('Volumen semanal')
+        graf_sem = alt.Chart(semanal).mark_line(point=True).encode(
+            x='Semana', y='Volumen'
+        )
+        st.altair_chart(graf_sem, use_container_width=True)
+
+        gimnasio['Mes'] = gimnasio['Fecha'].dt.to_period('M').astype(str)
+        mensual = gimnasio.groupby('Mes')['Volumen'].sum().reset_index()
+        st.subheader('Volumen mensual')
+        graf_mens = alt.Chart(mensual).mark_bar().encode(
+            x='Mes', y='Volumen'
+        )
+        st.altair_chart(graf_mens, use_container_width=True)
+
         carreras = usuario_datos[usuario_datos['Tipo'] == 'Carrera']
         if not carreras.empty:
             total_km = carreras['Distancia'].sum()
@@ -197,6 +231,15 @@ with st.expander('📊 Progreso'):
                 x='Dia:T', y='Distancia', color='Ejercicio'
             )
             st.altair_chart(graf_km, use_container_width=True)
+
+            carreras['Fecha'] = pd.to_datetime(carreras['Dia'], errors='coerce')
+            carreras['Semana'] = carreras['Fecha'].dt.to_period('W').astype(str)
+            run_sem = carreras.groupby('Semana')['Distancia'].sum().reset_index()
+            st.subheader('Distancia semanal')
+            graf_run_sem = alt.Chart(run_sem).mark_line(point=True).encode(
+                x='Semana', y='Distancia'
+            )
+            st.altair_chart(graf_run_sem, use_container_width=True)
 
         st.subheader('Comparativa con otros usuarios')
         ejercicio_comp = st.selectbox('Ejercicio', progreso_df['Ejercicio'].unique())
@@ -207,4 +250,12 @@ with st.expander('📊 Progreso'):
         comp = comp.merge(usuario_df[['Id_Usuario', 'Nombre']], on='Id_Usuario')
         graf_comp = alt.Chart(comp).mark_bar().encode(x='Nombre', y='Peso_kg')
         st.altair_chart(graf_comp, use_container_width=True)
+
+    with st.expander('🚧 En progreso'):
+        st.markdown(
+            '- Seguimiento de entrenamientos personalizados\n'
+            '- Módulo de running con GPS\n'
+            '- Notificaciones y recordatorios\n'
+            '- Sincronización con plataformas de salud'
+        )
 
