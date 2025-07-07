@@ -202,14 +202,23 @@ with tabs[1]:
         st.info('Aún no hay datos registrados')
     else:
         gimnasio = usuario_datos[usuario_datos['Tipo'] == 'Gimnasio'].copy()
-        gimnasio['Peso_kg'] = gimnasio.apply(lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592, axis=1)
+        gimnasio['Peso_kg'] = gimnasio.apply(
+            lambda r: r['Peso'] if r['Unidad'] != 'lb' else r['Peso'] * 0.453592,
+            axis=1,
+        )
+        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
+        min_d, max_d = gimnasio['Fecha'].min(), gimnasio['Fecha'].max()
+        rango = st.date_input('Rango de fechas', [min_d, max_d])
+        if len(rango) == 2:
+            start, end = pd.to_datetime(rango[0]), pd.to_datetime(rango[1])
+            gimnasio = gimnasio[(gimnasio['Fecha'] >= start) & (gimnasio['Fecha'] <= end)]
+
         ejercicios_disp = ['Todos'] + sorted(gimnasio['Ejercicio'].unique())
         ejercicio_sel = st.selectbox('Filtrar por ejercicio', ejercicios_disp)
         datos = gimnasio if ejercicio_sel == 'Todos' else gimnasio[gimnasio['Ejercicio'] == ejercicio_sel]
         gimnasio['Volumen'] = gimnasio['Peso_kg'] * gimnasio['Repeticiones'] * gimnasio['Sets']
         total_volumen = gimnasio['Volumen'].sum()
         dias = usuario_datos['Dia'].nunique()
-        gimnasio['Fecha'] = pd.to_datetime(gimnasio['Dia'], errors='coerce')
         semanas = gimnasio['Fecha'].dt.to_period('W').nunique()
         consistencia = dias / semanas if semanas else 0
         colm1, colm2, colm3 = st.columns(3)
@@ -267,6 +276,21 @@ with tabs[1]:
         )
         st.altair_chart(graf_vol, use_container_width=True)
 
+        join = gimnasio.merge(
+            grupo_muscular_df[['Ejercicio', 'Grupo_Muscular']],
+            on='Ejercicio',
+            how='left',
+        )
+        grupo_vol = join.groupby('Grupo_Muscular')['Volumen'].sum().reset_index()
+        st.subheader('Volumen por grupo muscular')
+        graf_grupo = (
+            alt.Chart(grupo_vol)
+            .mark_bar()
+            .encode(x='Grupo_Muscular', y='Volumen', tooltip=['Volumen'])
+            .interactive()
+        )
+        st.altair_chart(graf_grupo, use_container_width=True)
+
         gimnasio['Semana'] = gimnasio['Fecha'].dt.to_period('W').astype(str)
         semanal = gimnasio.groupby('Semana')['Volumen'].sum().reset_index()
         st.subheader('Volumen semanal')
@@ -277,6 +301,21 @@ with tabs[1]:
             .interactive()
         )
         st.altair_chart(graf_sem, use_container_width=True)
+
+        avg_sem = gimnasio.groupby(['Semana', 'Ejercicio'])['Peso_kg'].mean().reset_index()
+        st.subheader('Peso promedio semanal')
+        graf_avg = (
+            alt.Chart(avg_sem)
+            .mark_line(point=True)
+            .encode(
+                x='Semana',
+                y='Peso_kg',
+                color='Ejercicio',
+                tooltip=['Semana', 'Ejercicio', 'Peso_kg'],
+            )
+            .interactive()
+        )
+        st.altair_chart(graf_avg, use_container_width=True)
 
         gimnasio['Mes'] = gimnasio['Fecha'].dt.to_period('M').astype(str)
         mensual = gimnasio.groupby('Mes')['Volumen'].sum().reset_index()
