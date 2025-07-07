@@ -27,3 +27,10 @@ Aplicación sencilla en Streamlit para registrar entrenamientos de gimnasio y ca
 - Exportación e importación de datos para sincronizar con otras plataformas.
 - Manejo correcto de fechas incluso si los registros usan números de día.
 
+
+## Reiniciar datos de usuarios
+Si deseas borrar la información de usuarios registrada, ejecuta:
+```bash
+python reset_data.py
+```
+Se generará un archivo `data/Usuarios.csv` vacío con solo las cabeceras.
