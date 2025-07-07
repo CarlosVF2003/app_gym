@@ -25,4 +25,5 @@ Aplicación sencilla en Streamlit para registrar entrenamientos de gimnasio y ca
 - Recordatorios de entrenamiento desde la barra lateral.
 - Carga de rutas GPX/CSV y mapa de recorridos para carreras.
 - Exportación e importación de datos para sincronizar con otras plataformas.
+- Manejo correcto de fechas incluso si los registros usan números de día.
 

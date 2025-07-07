@@ -205,6 +205,13 @@ with tabs[1]:
         st.info('Aún no hay datos registrados')
     else:
         data_user['Fecha'] = pd.to_datetime(data_user['Dia'], errors='coerce')
+        mask1970 = data_user['Fecha'].dt.year == 1970
+        if mask1970.any():
+            max_day = pd.to_numeric(data_user.loc[mask1970, 'Dia'], errors='coerce').max()
+            base = pd.to_datetime(date.today()) - pd.Timedelta(days=int(max_day) - 1)
+            data_user.loc[mask1970, 'Fecha'] = pd.to_numeric(data_user.loc[mask1970, 'Dia'], errors='coerce').apply(
+                lambda d: base + pd.Timedelta(days=int(d) - 1)
+            )
         rango_opt = st.selectbox('Rango', ['Hoy', '7 días', '30 días', 'Personalizado'])
         hoy = pd.to_datetime(date.today())
         if rango_opt == 'Hoy':
